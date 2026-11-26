@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RIN1011 SEM 1 À 5</title>
+<style>
+:root {
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --text: #172033;
+  --muted: #1858b8;
+  --accent: #1e72d1;
+  --accent2: #2a1ddd;
+  --shadow: 0 12px 35px rgba(31, 41, 55, .12);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 18px 40px;
+}
+h1 { text-align:center; margin: 0 0 8px; font-size: 28px; }
+.subtitle { text-align:center; color:var(--muted); margin-bottom:24px; }
+.counter { text-align:center; color:var(--muted); margin-bottom:18px; font-size:14px; }
+.success-panel { position: sticky; top: 0; z-index: 30; background: rgba(244,247,251,.96); backdrop-filter: blur(8px); padding: 12px 0 14px; margin: 0 0 18px; }
+.success-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; max-width:560px; margin:0 auto 8px; font-size:14px; font-weight:bold; }
+.success-percent { color:#19c909; font-size:22px; font-weight:800; }
+.success-track { max-width:560px; height:10px; margin:0 auto 7px; background:#fecaca; border-radius:999px; overflow:hidden; }
+.success-fill { height:100%; width:100%; background:#20ca4b; border-radius:999px; transition:width .25s ease; }
+.success-details { text-align:center; color:var(--muted); font-size:12px; }
+.grid { display:flex; flex-direction:column; gap:16px; }
+.card-wrap {
+  perspective: 1200px;
+  height: 190px;
+  cursor: pointer;
+}
+.card {
+  width:100%; height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+  transition: transform .6s ease;
+}
+.card.flipped { transform:rotateY(180deg); }
+.face {
+  position:absolute; inset:0;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  background:var(--card);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:28px;
+  font-size:20px;
+  line-height:1.45;
+}
+.front { border-top:5px solid var(--accent); }
+.back {
+  transform:rotateY(180deg);
+  border-top:5px solid #310123;
+  font-size:18px;
+}
+.hint {
+  position:absolute; bottom:10px; left:0; right:0;
+  text-align:center; font-size:12px; color:var(--muted);
+}
+button {
+  display:block;
+  margin:30px auto 0;
+  border:0;
+  border-radius:999px;
+  padding:14px 30px;
+  background:var(--accent);
+  color:white;
+  font-size:17px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(49,94,251,.25);
+}
+button:hover { background:var(--accent2); }
+
+.card-wrap { position: relative; }
+.card-wrap.marked .face { border: 3px solid #e53935 !important; }
+.card-wrap.marked .front { border-top: 5px solid #e53935 !important; }
+.mark-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #b71c1c;
+  background: #e53935;
+  padding: 0;
+  margin: 0;
+  z-index: 20;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,.18);
+}
+.mark-btn:hover { background: #c62828; }
+.mark-btn.marked { background: #8b0000; }
+
+/* Bulle flottante des cartes d'erreurs */
+.error-bubble {
+  position: fixed; right: 22px; bottom: 22px; z-index: 1000;
+  width: 62px; height: 62px; border-radius: 50%; margin: 0; padding: 0;
+  background: #e53935; color: #fff; border: 3px solid #fff;
+  box-shadow: 0 5px 18px rgba(0,0,0,.25); font-size: 25px;
+  display: flex; align-items: center; justify-content: center;
+}
+.error-bubble:hover { background: #c62828; }
+.error-badge {
+  position: absolute; top: -6px; right: -5px; min-width: 25px; height: 25px;
+  padding: 0 6px; border-radius: 999px; background: #172033; color: white;
+  border: 2px solid white; font-size: 13px; line-height: 21px; text-align: center;
+}
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1100;
+  background: rgba(15, 23, 42, .62); padding: 24px;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.error-modal {
+  width: min(850px, 100%); max-height: 88vh; overflow-y: auto;
+  background: var(--bg); border-radius: 18px; padding: 24px; position: relative;
+  box-shadow: 0 18px 60px rgba(0,0,0,.35);
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-right: 42px; }
+.modal-header h2 { margin: 0 0 18px; font-size: 22px; }
+.close-modal {
+  position: absolute; top: 12px; right: 12px; margin: 0; width: 38px; height: 38px;
+  padding: 0; border-radius: 50%; background: #e5e7eb; color: #172033; font-size: 25px;
+  box-shadow: none;
+}
+.close-modal:hover { background: #cbd5e1; }
+.error-list { display: flex; flex-direction: column; gap: 14px; }
+.error-card { position: relative; min-height: 145px; background: white; border: 2px solid #e53935;
+  border-top: 5px solid #e53935; border-radius: 14px; padding: 24px 48px 24px 20px;
+  box-shadow: var(--shadow); cursor: pointer; white-space: pre-wrap; line-height: 1.45; }
+.error-card .answer { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid #e5e7eb; }
+.error-card.flipped .answer { display: block; }
+.unmark-btn {
+  position: absolute; top: 8px; right: 8px; margin: 0; padding: 0; width: 20px; height: 20px;
+  min-width: 20px; border-radius: 50%; border: 2px solid #0759b7; background: #1e72d1;
+  box-shadow: 0 2px 5px rgba(0,0,0,.18); z-index: 2;
+}
+.unmark-btn:hover { background: #084f9e; }
+.empty-errors { text-align: center; color: var(--muted); padding: 28px 12px; }
+@media (max-width:600px) {
+  .error-bubble { right: 14px; bottom: 14px; width: 56px; height: 56px; }
+  .modal-overlay { padding: 10px; } .error-modal { padding: 18px 12px; max-height: 92vh; }
+  .modal-header h2 { font-size: 19px; }
+}
+
+@media (max-width:600px) {
+  .card-wrap { height:220px; }
+  .face { font-size:18px; padding:22px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📚 RIN1011 SEM 1 À 5</h1>
+  <div class="subtitle">Clique sur une question pour voir la réponse. Reclique pour revenir à la question.</div>
+  <div class="success-panel" aria-live="polite">
+    <div class="success-heading"><span>✅ Taux de réussite</span><span id="successPercent" class="success-percent">100 %</span></div>
+    <div class="success-track" role="progressbar" aria-label="Taux de réussite" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="successFill" class="success-fill"></div></div>
+    <div id="successDetails" class="success-details">0 carte en rouge · 0 carte réussie sur 0</div>
+  </div>
+  <div class="counter"><span id="count">0</span> cartes</div>
+  <div id="cards" class="grid"></div>
+  <button id="shuffleBtn">🔀 Mélanger</button>
+</div>
+
+<button id="errorBubble" class="error-bubble" type="button" aria-label="Afficher les cartes d'erreurs" title="Afficher les cartes d'erreurs">
+  ⚑ <span id="errorBadge" class="error-badge">0</span>
+</button>
+
+<div id="errorModalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="errorModalTitle">
+  <div class="error-modal">
+    <button id="closeErrorModal" class="close-modal" type="button" aria-label="Fermer">×</button>
+    <div class="modal-header"><h2 id="errorModalTitle">🔴 Mes cartes d'erreurs (<span id="modalErrorCount">0</span>)</h2></div>
+    <div id="errorCardsList" class="error-list"></div>
+  </div>
+</div>
+
+<script>
+const originalCards = [
+  {
+    q: "Intervenants (3)?",
+    a: "Chercheurs d’emploi, Organisation, pouvoir publics"
+  },
+  {
+    q: "facteurs pouvant influencer le plan d’action en matière de dotation définition?",
+    a: "actions choisies pouvant être envisagées simultanément pour réduire les écarts entre les besoins en RH et la disponibilité du personnel"
+  },
+  {
+    q: "Stratégie d’affaires?",
+    a: "L’organisation modifie ses objectifs commerciaux (ex lancer un nouveau produit, s’implanter à l’international, automater la production, etc.)"
+  },
+  {
+    q: "Stratégie de dotation?",
+    a: "Comment on va bouger le personnel, la stratégie qu’on va entreprendre pour fournir les effectifs et les compétences correspondants"
+  },
+  {
+    q: "Dotation interne?",
+    a: "il arrive régulièrement que des organisations choisissent de pourvoir un poste vacant en l’affichant à l’interne. Dans ce cas, toutes les employées et tous les employés qui ont la même qualification et posent leur candidature à des postes vacants ont la priorité sur les candidates et candidats externes."
+  },
+  {
+    q: "Dotation externe?",
+    a: "lorsqu’il n’y a pas de candidate ou candidat interne, les organisations vont rechercher des candidates et candidats externes, c’est-à-dire en dehors de l’organisation. Avant de procéder de la sorte, il faut s’assurer que la convention collective le permet dans les milieux syndiqués."
+  },
+  {
+    q: "Explique mieux ce que peut représenter un Arrimage de la stratégie de dotation à la stratégie d’affaires de l’entreprise?",
+    a: "La dotation ne doit pas être vue comme une simple tâche opérationnelle ou administrative (remplacer au coup par coup un employé qui démissionne). Elle doit servir directement le plan stratégique : chaque fois que l'organisation modifie ses objectifs commerciaux (lancer un nouveau produit, s'implanter à l'international, automatiser la production), la stratégie de dotation doit s'ajuster pour fournir les effectifs et les compétences correspondants"
+  },
+  {
+    q: "Quels sont les 3 types de mouvements de la main-d’œuvre?",
+    a: "Mouvements internes, départs volontaires et départs involontaires"
+  },
+  {
+    q: "''du droit de retrait préventif de la travailleuse enceinte'' c’est quoi?",
+    a: "protection prévue par la loi au Québec qui permet à une employée enceinte de ne pas effectuer certaines tâches au travail"
+  },
+  {
+    q: "''rétention du personnel'' c’est quoi?",
+    a: "désigne l'ensemble des stratégies et des mesures qu'une entreprise met en place pour garder ses employés et éviter qu'ils quittent leur emploi"
+  },
+  {
+    q: "que permet la politique de gestion intergénérationnelle dans la stratégie de dotation et de GRH?",
+    a: "permet de réduire les conflits à l’intérieur des équipes de travail et, parallèlement, de favoriser la rétention du personnel"
+  },
+  {
+    q: "à quoi fait référence la notion de surqualification?",
+    a: "fait référence à l’« adéquation entre le niveau de scolarité de la personne et les compétences demandées par l’emploi occupé » la surqualification concerne toute personne dont le niveau de scolarité est supérieur aux compétences demandées"
+  },
+  {
+    q: "Comment pourrions-nous mieux planifier l’immigration de façon à l’arrimer aux besoins en main d’œuvre?",
+    a: "améliorer le processus de sélection des personnes immigrantes de façon à pouvoir intégrer celles qui ont des compétences recherchées sans viser de la surqualification. Pour les personnes immigrantes déjà établies, il faut revoir certaines de nos politiques d’intégration. Améliorer processus d’intégration. Arrimer les compétences et besoins. Privilégier l’immigration des jeunes de moins de 30 ans. Augmenter considérablement la part de l’immigration pour les professions en forte demande"
+  },
+  {
+    q: "adéquation VS inadéquation des compétences?",
+    a: "Il y a adéquation des compétences lorsque les candidats au poste vacant ou une personne nouvellement embauchée détiennent les compétences essentielles pour bien occuper le poste et répondre aux besoins organisationnels. Il y a inadéquation des compétences lorsque les candidats au poste vacant ou une personne nouvellement embauchée ne possèdent pas les compétences nécessaires pour occuper le poste."
+  },
+  {
+    q: "Que signifi une bonne adéquation des compétences?",
+    a: "réside dans l’instauration d’une stratégie de dotation et d’une planification de la main-d’œuvre efficace"
+  },
+  {
+    q: "quels sont les facteurs pouvant influencer le plan d’action en matière de dotation?",
+    a: "1) Philosophie de gestion 2) ressources financières 3) délais 4) relations de travail 5) l’environnement externe 6) objectifs en matière de diversité"
+  },
+  {
+    q: "La rétention du personnel?",
+    a: "C’est le processus mis en œuvre pour fidéliser les employés au sein d'une organisation ou à un poste donné en offrant des avantages financiers ou encore en améliorant les conditions de travail."
+  },
+  {
+    q: "Quelles sont les 4 grandes étapes pour implanter un programme de rétention du personnel?",
+    a: "1) analyser la rétention du personnel, 2) concevoir le programme de fidélisation des employés, 3) implanter le programme, 4) évaluer le programme et apporter les correctifs."
+  },
+  {
+    q: "définition rétention?",
+    a: "Capacité de l’entreprise à retenir son personnel"
+  },
+  {
+    q: "qu’est-ce que La première partie, analyser la rétention du personnel?",
+    a: "pose un diagnostic sur la capacité de l’entreprise à retenir son personnel, va déterminer la nature des pratiques à implanter. Elle comporte 5 étapes dont l’une d’elles consiste à établir le taux de roulement du personnel."
+  },
+  {
+    q: "qu’est-ce que La deuxième partie, concevoir le programme de fidélisation des employés?",
+    a: "cheminement pour définir un ensemble de pratiques de rétention à mettre en œuvre"
+  },
+  {
+    q: "qu’est-ce que La troisième partie, implanter le programme?",
+    a: "sonder les employés sur un choix de pratiques, à déterminer parmi les pratiques retenues les meilleures à implanter et à faire la promotion de celles-ci"
+  },
+  {
+    q: "qu’est-ce que la 4e étape évaluer le programme et apporter les correctifs qui clôt ce chemin?",
+    a: "procéder à l’analyse de la rétention avant de concevoir le programme pour s’assurer de choisir des pratiques en cohérence avec les stratégies d’affaires de l’entreprise"
+  },
+  {
+    q: "définition de l’analyse de la rétention?",
+    a: "permet d’évaluer si l’entreprise est aux prises avec un problème réel de roulement ou si le taux de roulement est acceptable"
+  },
+  {
+    q: "Comment évaluer si une entreprise est aux prises avec un problème réel de roulement ou si le taux de roulement est acceptable?",
+    a: "comparer le taux de roulement dans l’entreprise avec celui en cours dans l’industrie"
+  },
+  {
+    q: "quelles sont les 5 étapes pour procéder à l’analyse de la rétention?",
+    a: "1) Dresser le tableau des départs volontaires ; 2) Mesurer la rétention ; 3) Analyser les raisons et les coûts de départ ; 4) Analyser les facteurs de rétention ; 5) Repérer les zones à plus haut risque."
+  },
+  {
+    q: "ÉTAPE 1 DRESSER LE TABLEAU DES DÉPARTS VOLONTAIRES?",
+    a: "dresser la liste des employés qui ont quitté volontairement l’entreprise en consignant des informations factuelles (dates d’embauche et de départ, poste occupé, supérieur immédiat, salaire, années d’expérience, etc.). Ces données sont utiles à une analyse objective de la rétention et permettent de cerner des pistes de solutions menant à la diminution du taux de roulement de l’entreprise"
+  },
+  {
+    q: "ÉTAPE 2 MESURER LA RÉTENTION?",
+    a: "Le taux de roulement est un indicateur servant à mesurer la rétention des employés. Pour mesurer l’ampleur de ce taux, il faut que l’entreprise puisse se positionner par rapport à son secteur et à des entreprises comparables."
+  },
+  {
+    q: "ÉTAPE 3 ANALYSER LES RAISONS ET LES COÛTS DE DÉPART?",
+    a: "consiste à identifier les causes des départs grâce aux entrevues de départ, compiler les résultats pour repérer les problèmes et les services touchés, puis calculer les coûts liés au départ et au remplacement des employés."
+  },
+  {
+    q: "ÉTAPE 4 ANALYSER LES FACTEURS DE RÉTENTION?",
+    a: "consiste à sonder les employés actuels pour comprendre ce qui les motive à rester dans l'entreprise, à l'aide de groupes de discussion ou de questionnaires anonymes, puis à compiler les réponses pour identifier les principaux facteurs de fidélisation"
+  },
+  {
+    q: "ÉTAPE 5 REPÉRER LES ZONES À PLUS HAUT RISQUE?",
+    a: "consiste à identifier les postes ou les services ayant le taux de roulement le plus élevé afin de prioriser les mesures de rétention là où elles sont le plus nécessaires"
+  },
+  {
+    q: "Que signifie ‘’Mesurer le taux de roulement’’?",
+    a: "c’est évaluer de manière objective la rétention"
+  },
+  {
+    q: "dans quelles circonstances est-ce que le taux de roulement est volontaire versus lorsqu’il est involontaire?",
+    a: "est volontaire quand l’employé décide de lui-même de quitter ses fonctions. Le taux involontaire, en revanche, résulte d’une décision prise par l’employeur (par exemple un congédiement, une mise à pied)"
+  },
+  {
+    q: "est-ce que les pratiques de rétention ont un effet sur le taux de roulement involontaire?",
+    a: "Non Lorsqu’on analyse la rétention, c’est le roulement volontaire qui nous intéresse"
+  },
+  {
+    q: "quand est ce qu’un taux de roulement peut être problématique?",
+    a: "lorsque des employés qualifiés et performants quittent une entreprise en provoquant des effets négatifs sur la productivité"
+  },
+  {
+    q: "dans quelles circonstances un taux de roulement est acceptable?",
+    a: "lorsqu’il permet à une organisation d’augmenter son expertise, son efficacité, d’offrir des promotions et de consolider les valeurs organisationnelles"
+  },
+  {
+    q: "quand est-ce que l’entrevue de départ doit systématiquement être effectué?",
+    a: "À chaque fois qu’un employé quitte volontairement l’entreprise"
+  },
+  {
+    q: "quelles sont les 3 facteurs qui motivent la décision de conserver un emploi lorsqu’on conçoit un programme de fidélisation des employés?",
+    a: "1) Qualité des relations avec le supérieur immédiat 2) Possibilité de développer son employabilité (inclut les occasions de développement professionnel et ce qui permet d’avoir une meilleure valeur sur le marché de l’emploi), 3) Partage du succès financier (conditions de rémunération, et équité de cette rémunération)"
+  },
+  {
+    q: "quelles sont les 3 étapes importantes pour concevoir un programme de fidélisation?",
+    a: "ÉTAPE 1 Déterminer le personnel clé à retenir (détiennent des compétences rares et recherchées sur le marché de l’emploi), ÉTAPE 2 Miser sur les valeurs de l'entreprise (valeurs de l’organisation), ÉTAPE 3 Choisir les pratiques de rétention (choisir des pratiques de rétention en fonction des stratégies RH et capacité financière)"
+  },
+  {
+    q: "Vrai ou faux, pour l’étape 3 de choisir des pratiques de rétention, il est mieux de sélectionner des pratiques qui toucheraient uniquement la formation ou la rémunération n’aurait pas les effets escomptés sur la rétention?",
+    a: "Vrai"
+  },
+  {
+    q: "qu’est-ce que la dotation?",
+    a: "La dotation est le processus visant à fournir à une organisation le personnel compétent dont elle a besoin à court et à long terme."
+  },
+  {
+    q: "Quels facteurs vont influencer l’implantation d’un processus de dotation?",
+    a: "Des facteurs comme les soubresauts économiques et le vieillissement de la population active vont influencer la demande et l’offre de main-d’œuvre"
+  },
+  {
+    q: "que signifie la première étape préparation du processus de dotation?",
+    a: "prendre connaissance des facteurs socio-économiques et le cadre législatif de droit du travail déterminez les postes à pourvoir puis réaliser une analyse approfondie (analyse de fonction) pour enfin produire les 2 documents essentiel au processus de dotation (description de profil et profil de compétences)"
+  },
+  {
+    q: "quels sont les 2 documents importants qui permettent d’établir les critères de sélection lors de l’étape de la préparation du processus de dotation?",
+    a: "Description de poste et profil de compétences"
+  },
+  {
+    q: "Qu’est-ce l’analyse de fonction?",
+    a: "comprend la rédaction de la description de poste et du profil de compétences, permet de dégager des critères adéquats"
+  },
+  {
+    q: "synonyme analyse de fonction?",
+    a: "Analyse d’emploi"
+  },
+  {
+    q: "Qu’est-ce que la description de poste?",
+    a: "Consiste à mettre par écrit de façon structurée la synthèse des informations recueillies à l’étape de l’analyse de fonctions"
+  },
+  {
+    q: "que répertorie le document de description de poste?",
+    a: "1) Les tâches les responsabilités 2) les exigences liées au poste, 3) le matériel utilisé 4) les conditions de travail 5) les méthodes de travail liées au poste"
+  },
+  {
+    q: "qu’est ce qu’est le profil de compétence énumère?",
+    a: "Les différents savoirs essentiels au Poste à pourvoir soit les connaissances ainsi que les habiletés et aptitudes"
+  },
+  {
+    q: "les 2 documents description de poste et profils de compétences sont utiles à quels égards dans les activités de gestion des RH?",
+    a: "1) De bien définir les responsabilités de chaque employée ou employé ; 2) De choisir efficacement les critères de sélection, de promotion et de développement des compétences (formation) ; 3) De déterminer les attentes envers l’employée ou l’employé ; 4) D’évaluer efficacement la performance ; 5) De limiter l’arbitraire, car ces documents constituent des références en cas de litige lié au poste ; 6) De fixer la rémunération de façon équitable selon la valeur du poste ; 7) De mieux organiser le travail (distribution des tâches) ; 8) De mieux planifier la prévention en santé et sécurité au travail (SST, meilleure évaluation des risques)."
+  },
+  {
+    q: "sur quoi faut-il s’appuyer pour ne pas négliger la détermination des critères de sélection d’un poste?",
+    a: "La description de poste et le profil de compétences"
+  },
+  {
+    q: "quel est l’objectif lorsqu’on veut arriver à obtenir de bons critères de sélection?",
+    a: "l’objectif est d’arriver à obtenir une adéquation entre individu-poste et individu-organisation optimale"
+  },
+  {
+    q: "les stratégies pour attirer la main-d’œuvre se reflète dans le département de \\_\\_\\_?",
+    a: "La marque employeur"
+  },
+  {
+    q: "quel est l’objectif du recrutement?",
+    a: "D’attirer suffisamment de candidats de qualité"
+  },
+  {
+    q: "qu’est-ce que ça permet le fait que l’organisation fasse un recrutement efficace?",
+    a: "Ça permet d’être reconnu comme un employeur de choix"
+  },
+  {
+    q: "une organisation reconnue comme employeur de choix permet d’obtenir cette qualité dans quelles circonstances?",
+    a: "é lorsqu’il y a une adéquation individu-poste (capacité d’une candidate ou d’un candidat à satisfaire aux exigences du poste) et une adéquation individu-organisation efficiente"
+  },
+  {
+    q: "que favorise l’adéquation individu-organisation?",
+    a: "favorise la mobilisation et la performance au travail, en plus d’assurer une meilleure rétention de la main d’œuvre"
+  },
+  {
+    q: "nomme les 2 types de recrutement?",
+    a: "Recrutement interne et recrutement externe"
+  },
+  {
+    q: "donne les avantages du type de recrutement interne?",
+    a: "1) Engendre de faibles coûts, 2) écourte le délai de recrutement, 3) privilégiez les candidats qu’on connaît, 4) renforce la culture organisationnelle, 5) constitue une source de reconnaissance pour les employés, 6) exige moins d’efforts à l’étape de l’accueil et de l’intégration"
+  },
+  {
+    q: "donne les avantages du type de recrutement externe?",
+    a: "1) favorise l’innovation, 2) change la culture, pratiques d’affaires et gestion, 3) sert quand les compétences sont absentes à l’interne, 4) indispensable en période de croissance rapide ou de fort besoin, 5) favorise la diversité"
+  },
+  {
+    q: "quelles sont les objectifs de l’annonce d’emploi?",
+    a: "AIMA (accrocher, informer, motiver, activer)"
+  },
+  {
+    q: "nomme un synonyme de l’étape sélection du processus de dotation?",
+    a: "Choix du candidat"
+  },
+  {
+    q: "que regroupe l’étape sélection du processus de dotation?",
+    a: "1) l’étape de sélection du CV (présélection), 2) l’étape de l’entrevue, 3) l’étape des tests"
+  },
+  {
+    q: "Vrai ou faux; si je ne suis pas une évaluatrice il est important de tenir compte des caractéristiques que l’évaluateur va utiliser?",
+    a: "Vrai, il faut prendre en considération leur perception des outils et les consignes pour le candidat il faudra choisir le meilleur instrument permettant de vérifier si le candidat remplit les critères de sélection établis"
+  },
+  {
+    q: "quelle est la différence entre l’entrevue de présélection VS l’entrevue de sélection?",
+    a: "L’entrevue de présélection c’est tout juste avant l’entrevue de sélection (souvent un court rappel après avoir trier les CV), tandis que l’entrevue de sélection c’est l’entrevue officielle"
+  },
+  {
+    q: "pour l’étape 3 des tests de sélection quels sont les tests les plus connus?",
+    a: "1) Test de connaissances 2) test de capacité cognitive et d’aptitude 3) test de personnalité 4) test situationnel"
+  },
+  {
+    q: "qu’est-ce qu’on doit prendre en considération pour arriver à mesurer efficacement les résultats des tests?",
+    a: "1) validité (prédiction de la performance dans l’emploi, 2) fidélité ou fiabilité (stabilité des recherches résultats d’une mesure), 3) légalité (test conforme à la charte des droits et libertés de la personne)"
+  },
+  {
+    q: "en tant que recruteuse qui représente l’organisation qu’est-ce qu’il faut comprendre et savoir?",
+    a: "1) comprendre la pertinence des tests, 2) savoir comment évaluer les résultats des tests dans le processus de sélection, 3) tenir compte des caractéristiques des instruments de sélection ainsi que des caractéristiques des évaluateurs"
+  },
+  {
+    q: "pour qu’un instrument 2 sélections soit bon, il doit être \\_\\_\\_?",
+    a: "Fiable (produit des résultats qui sont constants dans le temps et comparables selon les évaluateurs)"
+  },
+  {
+    q: "vrai ou faux; il est important d’utiliser les mêmes instruments pour tous les candidats et d’uniformiser les conditions d’utilisation?",
+    a: "Vrai, ils doivent varier uniquement en fonction de la performance du candidat Ben pour le processus de sélection ça doit toujours être le même pour tous les candidats"
+  },
+  {
+    q: "qu’est-ce que ça veut dire quand on dit qu'un bon instrument de sélection doit être valide être valide?",
+    a: "Les résultats son représentatif de la compétence à mesurer, et la validité de l’instrument doit être confirmée c’est-à-dire que tous les évaluateurs doivent percevoir l’instrument comme utile pour l’évaluation des compétences"
+  },
+  {
+    q: "sur quoi s’appuie la validité d’un instrument de sélection dans le processus de dotation?",
+    a: "s’appuie sur une analyse de fonctions et un profil de compétence rédigé à une étape précédente du processus de dotation"
+  },
+  {
+    q: "l’étape 4 de l’intégration du processus de dotation comprends quelles étapes?",
+    a: "1) l’embauche, 2) l’étape de l’accueil"
+  },
+  {
+    q: "vrai ou faux à l’étape de l’intégration après avoir suivi les étapes précédentes et qu’on est rendu à l’embauche, l’organisation doit confier à une firme spécialisée l’objet de vérification d’antécédents médicaux judiciaires et enquête de crédit?",
+    a: "Vrai l’organisation peut seulement faire la vérification reliée à l’emploi et non sur les antécédents médicaux judiciaires ni enquête de crédit ça doit être fait par des firmes spécialisées"
+  },
+  {
+    q: "non un synonyme de l’étape de l’accueil?",
+    a: "Intégration des RH"
+  },
+  {
+    q: "qu’est-ce que l’étape de l’accueil et à quel moment les actions reliées à cette étape peuvent se produire?",
+    a: "L’instauration d’un programme d’intégration des nouvelles ressources par l’employeur, Pour ce faire les RH doivent planifier le déploiement des ressources appropriées, et ce bien avant l’entrée en poste du nouvel employé"
+  },
+  {
+    q: "quels sont les avantages d’un programme bien conçu d’intégration de nouvelles ressources, à l’étape de l’accueil?",
+    a: "1) Fidélise les recrues il réduit donc le nombre de démissions, 2) influence positivement le niveau de productivité et la performance organisationnelle, 3) accroît le niveau de satisfaction et l’engagement du nouveau personnel"
+  },
+  {
+    q: "pourquoi est-ce que la 5e étape du processus de dotation qui est l’étape de l’évaluation est nécessaire?",
+    a: "Il est nécessaire d’évaluer chacune des étapes du processus de dotation (préparation recrutement sélection et intégration) dans le but d’améliorer l’expérience pour la prochaine fois étirer des leçon des erreurs commises dans le passé"
+  },
+  {
+    q: "Chômage (Unemployment)= Situation d’une personne sans emploi mais disponible pour travailler et en recherche active d’emploi",
+    a: ""
+  },
+  {
+    q: "Le taux de chômage et le taux d’activité?",
+    a: "Le taux de chômage correspond à la proportion de la population active qui cherche activement du travail sans en trouver et qui est disponible pour travailler. Cette proportion exclut les personnes qui ne sont pas disponibles pour travailler, par exemple celles qui ne cherchent pas de travail en raison de problèmes de santé ou d’obligations personnelles ou qui choisissent de prolonger leurs études, ni les personnes qui ne cherchent pas d’emploi, comme les femmes à la maison ou les étudiants à temps plein, ne sont pas incluses dans le calcul du taux de chômage. Le taux de chômage est considéré comme un indicateur clé de la santé économique d’une société, puisqu’une période de croissance économique se caractérise généralement par un faible taux de chômage"
+  },
+  {
+    q: "Quel est le résultat d’un faible taux de chômage?",
+    a: "La main-d’œuvre disponible au travail est donc à la baisse, donc pour un employeur, il peut être plus difficile de recruter du personnel"
+  },
+  {
+    q: "Quel est le résultat d’un taux de chômage élevé?",
+    a: "La main-d’œuvre disponible au travail est donc à la hausse. Par conséquent, nous sommes en période de récession économique. Pour un employeur, le recrutement peut s’avérer plus facile, puisque le bassin de travailleurs disponibles s’est élargi."
+  },
+  {
+    q: "vrai ou faux; Les femmes sont aujourd’hui moins touchées par le chômage que les hommes?",
+    a: "Vrai"
+  },
+  {
+    q: "immigrants?",
+    a: "personne arrivée au QC il y a – de 5 ans"
+  },
+  {
+    q: "le taux d’activité, c’est-à-dire la proportion de la population qui cherche à prendre part au marché du travail",
+    a: ""
+  },
+  {
+    q: "cette correspondance entre, d’une part, les postes et, d’autre part, les compétences et la disponibilité de la main-d’œuvre est un élément indispensable de toute action de recrutement du personnel. Il devient donc nécessaire d’examiner d’un point de vue qualitatif la nature des emplois, puis les caractéristiques des travailleurs au Canada",
+    a: ""
+  },
+  {
+    q: "Emploi temporaire Temporary job Emploi dont la date de cessation est prédéterminée ou qui se terminera à la n d’un projet particulier",
+    a: ""
+  },
+  {
+    q: "?",
+    a: "?En e et, comme le montre la gure 1.14, au cours des 30 dernières années, le nombre de Canadiens ayant cumulé au moins deux emplois ou deux entreprises a quasiment doublé, tandis que la croissance globale de l’emploi n’atteignait que 46,6 %"
+  },
+  {
+    q: "Les enjeux de la dotation n (Moyser, 2017). En e Cependant, selon certaines études, le rattrapage des femmes en matière de taux d’activité tire à sa et, l’écart entre le taux d’activité des femmes d’une génération à l’autre est de moins en moins marqué, comme en témoigne la gure 1.16. Par ailleurs, les données indiquent que l’écart entre les sexes diminue lorsque le niveau de scolarité augmente, sans toutefois disparaître entièrement",
+    a: ""
+  },
+  {
+    q: "Bien qu’elles soient encore nombreuses dans des professions traditionnellement féminines, les femmes ont cependant fait des percées importantes au sein de certains emplois dits « non traditionnels », plus particulièrement parmi les professions hautement quali ées. Ainsi, la représentation des femmes dans les Emploi à prédominance féminine. Female-dominated occupation Emploi dans lequel au moins 60 % des salariés sont des femmes",
+    a: ""
+  },
+  {
+    q: "Les femmes sont de plus en plus nombreuses dans les professions hautement quali ées. professions liées au domaine des sciences, des technologies, du génie et des mathématiques est passée de 17,4 % en 1987 à 24,4 % en 2015 (Moyser, 2017). La proportion de femmes a également progressé dans les postes de direction",
+    a: ""
+  },
+  {
+    q: "Ainsi, la part de diplômés universitaires dans la population active a atteint 29,2 % en 2016 et celle des diplômés du collégial 35,4 %, contre respectivement 13,8 % et 25,8 % en 1990. Parallèlement, la proportion de travailleurs possédant au plus un diplôme d’études secondaires a diminué de façon constante au cours de la même période, passant de 50,6 % à 28,8 % (Statistique Canada, 2017e, 2017f )",
+    a: ""
+  },
+  {
+    q: "Génération Y Y Generation Ensemble des personnes nées approximativement entre 1980 et 2000",
+    a: ""
+  },
+  {
+    q: "Si le niveau de scolarisation moyen de la population active a augmenté au cours des dernières années, le mérite n’en revient pas uniquement aux Canadiens de la génération Y. L’arrivée au pays, surtout depuis les années 1990, d’immigrants hautement quali és y a aussi participé grandement. Cette immigration contribue également à accroître la diversité ethnique de la main-d’œuvre au Canada. L’accroissement de la diversité ethnique La population active est ethniquement de plus en plus diversi 34 ée",
+    a: ""
+  },
+  {
+    q: "la proportion de la population du Canada née à l’extérieur du pays a atteint 20,3 % en 2015, son plus haut niveau en 70 ans (OCDE, 2017b). On estime que, d’ici 2031, la population du Canada née à l’étranger pourrait croître quatre fois plus rapidement que le reste de la population pour atteindre 9,8 à 12,5 millions d’individus (Statistique Canada, 2011). Parmi ces immigrants, un grand nombre sont des adultes qui, immédiatement ou très rapidement après leur arrivée, viennent grossir les rangs de la population active. Ainsi, les immigrants récents ont représenté presque 70 % de la croissance de la population active pendant les années 1990 (Statistique Canada, 2003). Or, à l’exception de l’accueil des réfugiés, la politique du Canada en matière d’immigration favorise l’arrivée d’immigrants scolarisés, d’étudiants ou d’entrepreneurs. On observe donc une hausse importante de la proportion d’immigrants ayant les compétences pour occuper des professions hautement quali ées, comme en témoigne la gure 1.19",
+    a: ""
+  },
+  {
+    q: "Une dernière caractéristique importante de la population active canadienne est son vieillissement. Le recensement de 2016 con rme les tendances de vieillissement de la population, dont l’âge médian a atteint un record à 40,6 ans (Statistique Canada, 2017q)",
+    a: ""
+  },
+  {
+    q: "Pour la première fois lors du recensement de 2011, les personnes âgées de 55 à 64 ans, soit celles qui approchaient de l’âge de la retraite, étaient plus nombreuses que les jeunes de 15 à 24 ans, qui constituent la génération sur le point d’intégrer le marché du travail ; cette tendance se maintient depuis (Statistique Canada, 2017s). Ainsi, les générations qui quittent la vie active ne pourront que partiellement être remplacées par les cohortes de nouveaux travailleurs, de sorte que le taux d’activité devrait chuter",
+    a: ""
+  },
+  {
+    q: "Les enjeux de la dotation stabiliser, voire décliner, de sorte que le Canada devrait connaître une croissance très lente de sa population active d’ici 2024 (Emploi et Développement social Canada, 2016a). Sur le plan quantitatif, la croissance de la population active devrait donc coïncider avec celle des emplois. Cependant, des déséquilibres qualitatifs sont à prévoir, dans la mesure où les exigences des emplois disponibles ne correspondront pas nécessairement aux compétences de la population active (Emploi et Développement social Canada, 2016b)",
+    a: ""
+  },
+  {
+    q: "Ces données re ètent une caractéristique de la situation duale du marché du travail canadien, qui connaît des déséquilibres par niveau de compétence ou par profession (Ressources humaines et développement des compétences Canada, 2008). Ainsi, d’ici 2024, on prévoit une croissance de l’emploi supérieure à la croissance de la population active pour les professions exigeant habituellement des études universitaires, des études collégiales ou une formation d’apprenti. Dans les professions de la gestion, les taux de croissance de l’emploi et de la population active devraient être identiques. Finalement, la croissance de la population active devrait être supérieure à celle de l’emploi pour les professions exigeant habituellement des études secondaires ou une formation en cours d’emploi (Ressources humaines et développement des compétences Canada, 2008). Il en résulte des risques de pénurie ponctuelle pour les emplois exigeant des études universitaires, collégiales ou professionnelles, comme illustré au tableau 1.03, à la page suivante. Ce tableau montre que c’est dans le secteur de la santé que l’on envisage les pénuries de main-d’œuvre les plus criantes. Cette situation résulte, d’une part, de l’augmentation anticipée des besoins découlant du vieillissement de la population et de la hausse des dépenses publiques et, d’autre part, des caractéristiques démographiques des professionnels en activité (Emploi et Développement social Canada, 2016b)",
+    a: ""
+  },
+  {
+    q: "Par ailleurs, la durée et le coût des études, le contingentement de plusieurs formations et la di culté pour les immigrants à faire reconnaître leurs diplômes acquis à l’étranger sont autant de freins à l’entrée dans le secteur de nouveaux travailleurs. Ainsi, on estime que toutes les professions du secteur connaîtront des possibilités d’emploi supérieures au nombre de travailleurs disponibles",
+    a: ""
+  },
+  {
+    q: "Ce tableau montre que c’est dans le secteur de la santé que l’on envisage les pénuries de main-d’œuvre les plus criantes. Cette situation résulte, d’une part, de l’augmentation anticipée des besoins découlant du vieillissement de la population et de la hausse des dépenses publiques et, d’autre part, des caractéristiques démographiques des professionnels en activité (Emploi et Développement social Canada, 2016b)",
+    a: ""
+  },
+  {
+    q: "la durée et le coût des études, le contingentement de plusieurs formations et la di culté pour les immigrants à faire reconnaître leurs diplômes acquis à l’étranger sont autant de freins à l’entrée dans le secteur de nouveaux travailleurs. Ainsi, on estime que toutes les professions du secteur connaîtront des possibilités d’emploi supérieures au nombre de travailleurs disponibles",
+    a: ""
+  },
+  {
+    q: "Dans les autres secteurs susceptibles d’a cher des possibilités d’emploi supérieures au nombre de travailleurs disponibles, les pénuries anticipées sont Les employeurs anticipent des pénuries de main-d’œuvre quali ée",
+    a: ""
+  },
+  {
+    q: "En revanche, d’autres catégories professionnelles sont susceptibles de connaître un excédent de demandeurs d’emploi (Emploi et Développement social Canada, 2016b). Parmi celles-ci se trouvent les emplois de bureau, comme les adjoints administratifs et les commis, touchés par l’introduction de nouvelles technologies qui réduisent le recours à la main-d’œuvre. De façon plus étonnante, un certain nombre de professions du domaine de l’informatique se trouvent également dans cette liste : bien que la croissance de l’emploi dans ce secteur demeure forte, la relative jeunesse de la main-d’œuvre occasionnera un taux de départs à la retraite inférieur à la moyenne nationale, tandis qu’arriveront en grand nombre sur le marché du travail les personnes qui étudient actuellement dans le domaine",
+    a: ""
+  },
+  {
+    q: "La situation dans le monde L’économie mondiale, qui a connu en 2008-2009 la récession la plus grave depuis la Seconde Guerre mondiale et dont elle peine à se relever, a considérablement a aibli le marché du travail (Bureau international du travail, 2017a). La reprise économique a été moins vigoureuse que prévu en 2016 et 2017, de sorte que le taux de chômage mondial devrait atteindre 5,8 % en 2017, ce qui représente plus de 201 millions de chômeurs. Cependant, ces données globales masquent des réalités di érentes selon les pays",
+    a: ""
+  },
+  {
+    q: "Le recul du taux de chômage moyen dans les économies développées est un autre signe d’embellie sur le marché du travail, mais il cache là encore de grandes disparités géographiques : le taux de chômage moyen est inférieur à 4 % dans plusieurs pays comme la République tchèque, l’Islande, le Japon, la Corée et le Mexique, mais il dépasse 23 % en Grèce (OCDE, 2017a). FIGURE 1.22",
+    a: ""
+  },
+  {
+    q: "Cependant, la situation du marché du travail ne s’évalue pas uniquement par les taux d’emploi et de chômage. Des facteurs qualitatifs, comme la qualité des emplois et l’inclusivité du marché du travail, doivent également être considérés. Or, la qualité des emplois, mesurée par le revenu d’activité, l’insécurité sur le marché du travail et la qualité de l’environnement de travail, est très variable d’un pays à l’autre (OCDE, 2017a). Par exemple, le marché du travail en Espagne, 42",
+    a: ""
+  },
+  {
+    q: ". Ainsi, dans les pays de l’OCDE, la proportion de la population active ayant un bas revenu a diminué de 2005 à 2015, passant de 17,7 % à 16,7 % comme le montre le tableau 1.04. Ce taux se situait alors à moins de 10 % dans les pays comme le Danemark, la Belgique, la France ou l’Italie. En revanche, dans plusieurs pays reconnus pour leur taux de chômage bas, comme la Corée, le Canada ou les États-Unis, plus de 20 % de la population d’âge actif dispose d’un faible revenu. Pour être inclusif, un marché du travail doit aussi garantir des chances égales aux hommes et aux femmes. À ce titre, la majorité des économies développées s’améliorent puisque l’écart entre les sexes diminue, mais il reste préoccupant : en moyenne, dans les pays de l’OCDE, la di érence de revenu du travail entre les hommes et les femmes s’établit à près de 40 % (OCDE, 2017a). Cette di érence s’explique par les salaires moindres perçus par les femmes, de même que par les écarts de taux d’emploi et de nombre d’heures travaillées entre les hommes et les femmes. Également, dans la majorité des pays de l’OCDE, les femmes représentent plus de la moitié des travailleurs à temps partiel, comme le montre le tableau 1.04. TABLEAU 1.04",
+    a: ""
+  },
+  {
+    q: "Ces dé s liés à la qualité et à la stabilité du marché du travail s’accompagnent, dans tous les pays développés, d’une évolution démographique de la population active similaire. À cet égard, le tableau 1.06, à la page suivante, présente quelques indicateurs dignes d’intérêt. Le premier phénomène à considérer est que le vieillissement de la population générale de ces pays a des répercussions sur la population active qui elle-même augmente en âge. Comme les taux de fertilité des pays développés sont, depuis de nombreuses années, inférieurs à deux enfants par femme en âge de procréer, les générations qui se retirent du marché du travail ne sont pas remplacées en totalité. Une diminution du taux d’activité est donc à prévoir dans ces pays, et cela, malgré l’existence d’une légère marge de progression dans le taux d’activité des femmes. Par ailleurs, les économies développées béné cient d’une main-d’œuvre relativement bien formée, donc en mesure d’occuper les emplois hautement quali és dont le nombre est en croissance. En e et, le niveau de formation des adultes progresse, notamment sous l’e et de l’augmentation du nombre de jeunes qui terminent leurs études secondaires et postsecondaires : dans les pays développés, l’obtention d’un diplôme de n d’études secondaires devient la norme et un jeune sur trois, en moyenne, obtient un diplôme de niveau universitaire. Ainsi, à maints égards, toutes les économies développées connaissent des dé s semblables à ceux du Canada en ce qui concerne leurs marchés du travail respectifs. À plus d’un titre, le Canada se compare avantageusement aux autres pays de l’OCDE, se situant dans le tiers supérieur ou intermédiaire pour la majorité des indicateurs. La participation équitable à un marché du travail de qualité reste un dé , mais la réduction du taux d’activité due au vieillissement de la population active devrait permettre de stabiliser le taux de chômage. Le principal enjeu des économies développées consiste à maintenir une population active en quantité et en qualité su santes pour répondre aux besoins changeants du marché du travail",
+    a: ""
+  },
+  {
+    q: "L’Afrique subsaharienne est la région où la proportion de personnes souhaitant s’établir à l’étranger est la plus élevée, à 32 % (Bureau international du travail, 2017a). Il en résulte que plusieurs pays industrialisés, aux prises avec une réduction de leur population active, font appel à des travailleurs étrangers, surtout quali és. Par exemple, en 2013, 18 % des scienti ques et ingénieurs travaillant aux États-Unis étaient des immigrants, principalement originaires d’Asie ; 9 % d’entre eux détenaient un doctorat, contre 4 % pour les scienti ques et ingénieurs nés aux États-Unis (Lan et al., 2015)",
+    a: ""
+  },
+  {
+    q: "Les conséquences de la situation mondiale sur le recrutement au Canada La situation des marchés du travail dans le monde se caractérise donc par la coexistence, d’une part, d’un groupe de pays développés, dont certains peinent à se remettre de la crise de 2008-2009, mais qui anticipent une décroissance de leur population active entraînant des besoins de main-d’œuvre ; et, d’autre part, d’un groupe hétérogène de pays émergents ou en développement qui doivent consolider leurs infrastructures pour accompagner la transition de leur main-d’œuvre vers une économie de service. La situation du Canada se compare à celle de la plupart des pays industrialisés",
+    a: ""
+  },
+  {
+    q: "exigences des secteurs économiques en développement, plusieurs pays industrialisés entrent en concurrence pour attirer une main-d’œuvre compétente. Le niveau de scolarisation et le taux d’activité des populations étant élevés dans les pays développés, des progrès dans ces domaines ne permettent de répondre qu’en partie à ces besoins de main-d’œuvre. En conséquence, la concurrence pour attirer les talents doit se produire à l’échelle mondiale. L’immigration d’une main-d’œuvre quali ée est la seule façon, pour les pays industrialisés, de réagir aux répercussions de la baisse de la natalité. Le cas de l’entreprise Logival présenté en début de chapitre illustre ce phénomène : le directeur des RH n’hésite pas à participer à des missions de recrutement à l’étranger pour tenter d’attirer la main-d’œuvre dont il a besoin. Ces mouvements migratoires constituent toutefois deux enjeux majeurs. D’une part, ils risquent de se faire aux dépens des pays en développement, qui ont pourtant besoin de garder leur main-d’œuvre quali ée a n qu’elle puisse participer à la croissance de leur économie. D’autre part, l’af ux soudain d’immigrés, notamment de demandeurs d’asile, dans les pays développés peut alimenter les inquiétudes des populations locales (OCDE, 2017b)",
+    a: ""
+  },
+  {
+    q: "Ainsi, au Canada, le système de sélection des immigrants, implanté depuis 1967, octroie à chacun des points en fonction notamment du niveau de scolarité, de l’expérience professionnelle et de la maîtrise des langues o cielles. Malgré une certaine lourdeur administrative, ce système, qui a fait l’objet de révisions en 2016, réussit à faciliter l’arrivée au pays des immigrants quali és (Kapur et McHale, 2005). Les pays en développement fournissent donc un bassin de main-d’œuvre sous-utilisée et de mieux en mieux formée. Cependant, le dé  pour les pays industrialisés consiste à attirer cette main-d’œuvre étrangère et à l’intégrer au marché du travail, et ce, sans perturber leur équilibre démographique fragile. Or, l’intégration au marché du travail des immigrants, même hautement quali és, n’est pas chose facile, notamment parce que les candidats ne parlent pas toujours bien la langue du pays de destination. En outre, trouver et recruter des immigrants implique un coût et des e orts supplémentaires pour les employeurs, comme nous aurons l’occasion de le constater dans le chapitre 9. Par ailleurs, en raison de l’accroissement du niveau de formation de leurs populations, plusieurs pays en développement font eux-mêmes concurrence aux économies industrialisées. Plutôt que de subir un exode des cerveaux qui ne ferait qu’a aiblir l’économie locale, certains pays comme la Chine ou l’Inde déploient beaucoup d’e orts pour obtenir des contrats pour le compte d’entreprises multinationales qui souhaitent délocaliser leurs activités. Ces pays en développement entrent donc en concurrence directe avec les économies industrialisées, tant sur le plan des RH que sur celui de la production de biens et services",
+    a: ""
+  },
+  {
+    q: "Quant au marché du travail canadien, il se caractérise par la réalité duale du chômage et de la rareté de main-d’œuvre quali ée, qui pose aux employeurs un paradoxe en matière de RH : celui de la pénurie au milieu de l’abondance. Le problème ne tient donc pas tant au nombre de candidats potentiels qu’à l’inadéquation des compétences",
+    a: ""
+  },
+  {
+    q: "Une organisation doit établir une stratégie de gestion des RH avant de se lancer dans le recrutement. 54 Comme nous l’avons vu précédemment, les pouvoirs publics doivent agir pour limiter les déséquilibres anticipés de main-d’œuvre, par exemple en révisant leurs politiques d’immigration ou en favorisant la formation de la main-d’œuvre. Cependant, la responsabilité des activités de dotation en personnel revient ultimement aux organisations qui se font concurrence pour tenter d’attirer ces talents. Or, si certaines entreprises béné cient d’une grande notoriété qui leur donne une longueur d’avance dans le recrutement, toutes doivent faire preuve d’innovation et de rigueur pour cerner avec soin leurs besoins de main-d’œuvre et concevoir des stratégies de recrutement appropriées à la situation. 1.3.1 L’établissement d’une stratégie de dotation Si, à une époque passée où la main-d’œuvre était abondante, les organisations pouvaient se permettre de recruter au dernier moment, cela n’est plus possible aujourd’hui. Les employeurs doivent donc établir une stratégie de gestion des RH qui inclut à la fois le développement des compétences à l’interne, l’attraction de candidats de l’extérieur et la rétention des employés, notamment dans les emplois où le recrutement de personnel est di cile (Mercer, 2011). Or, seule une minorité d’organisations, de l’ordre de 20 % selon certaines sources, semble disposer d’une véritable stratégie de gestion des RH solide et alignée sur la stratégie d’entreprise (Beames, 2015)",
+    a: ""
+  },
+  {
+    q: "l’élaboration d’une telle stratégie doit partir des résultats organisationnels attendus et de la contribution des RH à ces résultats. Par la suite, l’organisation doit déterminer les compétences dont elle aura besoin pour atteindre ses objectifs, et identi er les écarts entre les compétences disponibles et les compétences recherchées. S’o re alors une diversité de moyens pour rétablir l’équilibre entre les demandes et les disponibilités : avoir recours à une main d’œuvre externe temporaire, mettre en place des mesures pour conserver les employés clés, développer les talents à l’interne et faire preuve d’innovation pour attirer des candidats talentueux (Beames, 2015)",
+    a: ""
+  },
+  {
+    q: "La connaissance du marché du travail Nous l’avons vu précédemment, le marché du travail canadien se caractérise par la coexistence d’une main-d’œuvre spécialisée, largement sollicitée et insu sante en nombre pour satisfaire les besoins de l’économie, et d’un nombre élevé de chômeurs, dont les compétences ne semblent pas en adéquation avec les exigences des emplois. Aux prises avec cette dualité du marché du travail, les employeurs doivent déployer des stratégies di érentes a n de pourvoir les postes vacants. Par exemple, pour les professions peu spécialisées, le dé  est double : pour certains postes, il consiste à gérer un grand nombre de candidats qui cherchent à intégrer un secteur du marché du travail en déclin ; pour d’autres, au contraire, il nécessite d’attirer des personnes rebutées par l’image dévalorisée du secteur d’activité ou de l’emploi",
+    a: ""
+  },
+  {
+    q: ". Comme nous le verrons dans le chapitre 8, la connaissance des divers acteurs permet de cibler les actions de recrutement. Par exemple, utiliser le bulletin mensuel d’une association professionnelle pour annoncer un poste spécialisé se révèle habituellement plus e cace que publier une annonce similaire dans le quotidien local. Une bonne compréhension des attentes des candidats est aussi nécessaire pour attirer les talents recherchés. Savoir quel est le salaire moyen o ert pour le poste à pourvoir est un minimum, mais au-delà des considérations nancières, il est nécessaire de connaître les conditions de travail proposées par la concurrence, d’évaluer les possibilités d’avancement professionnel ou d’a ectation à l’étranger qui peuvent être o ertes au candidat ou encore de se pencher sur ses attentes en matière de exibilité des horaires (Chapman et al., 2005). Cette compréhension est particulièrement importante à l’heure où arrivent dans la population active les individus de la génération Y, dont les valeurs di èrent souvent de celles de leurs aînés. Le marché du travail étant en constante évolution, cette connaissance n’est jamais acquise de façon dé nitive. Les formations évoluent, les concentrations de chômage se déplacent géographiquement, les compétences recherchées changent, les concurrents disparaissent ou naissent. Une partie importante du travail d’un recruteur, souvent sous estimée, consiste donc, par des activités de réseautage et de veille, à se tenir continuellement à l’a ût de l’évolution du marché du travail. Cette connaissance permet ensuite de développer des stratégies de dotation adaptées à chaque situation. Si une bonne compréhension du marché du travail est indispensable pour adopter des stratégies de dotation e caces, un élément est tout aussi important à connaître : l’encadrement juridique des activités de recrutement et de sélection. La dotation est en e et un domaine particulièrement soumis à des contraintes légales, qui feront l’objet du chapitre 2",
+    a: ""
+  },
+  {
+    q: "la stratégie de dotation choisie doit être adaptée à l’organisation et au poste à pourvoir. 1.3.3 La diversi cation et la personnalisation Compte tenu de la diversité des besoins et de la rareté de certains pro ls, un recruteur doit nécessairement développer une approche di érente en fonction du poste à pourvoir et des particularités du marché du travail. Par exemple, a n de pourvoir rapidement un grand nombre de postes peu quali és, organiser une journée porte ouverte au cours de laquelle se déroulent les entrevues de sélection peut s’avérer une stratégie très e cace. Cela fait partie d’une des stratégies adoptées par Kevin Miller dans la mise en situation présentée en début de chapitre. Une telle stratégie serait toutefois impensable dans le cas d’un poste très spécialisé, car ce type de recrutement requiert une approche beaucoup plus personnalisée par laquelle les interactions avec un candidat sont adaptées en fonction de la disponibilité de celui-ci. Diversi er les approches signi e également ne pas se contenter de cibler toujours le même groupe de candidats potentiels. Comme nous l’avons vu plus tôt, le marché du travail possède des bassins importants de travailleurs sans emploi ou sous-employés qui pourraient être intégrés à la population active. Ainsi, les jeunes chômeurs, les parents d’enfants en bas âge, les personnes handicapées, les jeunes retraités qui désirent conserver une certaine activité professionnelle, les travailleurs d’un secteur d’activité en déclin ou les immigrants dont les diplômes ne sont pas reconnus en totalité constituent autant de sources de candidats potentiels. Certes, ces candidats peuvent avoir des besoins particuliers, comme une formation d’appoint ou une certaine exibilité dans les horaires, mais ils n’en constituent pas moins une source intéressante de talents. Les personnes qui ne sont pas activement à la recherche d’un emploi constituent un autre bassin de candidats potentiels souvent négligé. Ici encore, les activités de réseautage d’un recruteur peuvent lui permettre de rencontrer des personnes qui, même si elles ne souhaitent pas changer d’emploi à court terme, peuvent devenir des candidats par la suite. Multiplier les bassins de recrutement non traditionnels peut également signi er, dans certains cas, étendre la zone géographique de recherche d’un candidat. Par exemple, de 2010 à 2015, plusieurs entreprises de l’Alberta aux prises avec une pénurie importante de main-d’œuvre ont recruté des candidats dans les autres provinces de l’Ouest, et même en Ontario et au Québec. Les données de 2017 con rment le renversement de cette tendance amorcé en 2015 lorsque la province a enregistré des pertes migratoires interprovinciales en raison du tassement de son économie (Statistique Canada, 2017s). Toutefois, la migration internationale compense, pour les provinces visées, la perte de population active causée par la migration interprovinciale. Le recrutement international soutient donc l’expansion du marché de la main-d’œuvre. Nous y reviendrons dans le chapitre 9. À ce sujet, reprenons le cas de l’entreprise Logival : le directeur des RH explore la possibilité de recruter des travailleurs étrangers pour venir occuper des postes peu quali és dans son usine de Québec. Ainsi, les employeurs doivent faire preuve d’imagination pour cibler de nouveaux bassins de main-d’œuvre. Attirer ces candidats nécessite cependant une ré exion sur ce que l’organisation est prête à o rir à de nouveaux employés, c’està-dire sur son positionnement en tant qu’employeur",
+    a: ""
+  },
+  {
+    q: "Ainsi, un poste de chasseur de têtes interne a été créé au siège social de Montréal a n de prendre en charge tous les postes dif ciles à pourvoir. Le rôle de cette personne est de faire du dépistage de talents, que ce soit sur les réseaux sociaux ou lors d’activités de réseautage en personne",
+    a: ""
+  },
+  {
+    q: "Avoir une marque employeur forte et visible permet à une organisation de communiquer son identité, sa vision, ses valeurs et sa culture à ses salariés et aux candidats potentiels. Cependant, pour qu’elle demeure cohérente, elle doit ensuite être utilisée pour sélectionner les candidats qui seront le plus en adéquation avec la culture organisationnelle",
+    a: ""
+  },
+  {
+    q: "les emplois, même peu quali és, exigent un nombre croissant de compétences dites « transversales », comme l’esprit d’analyse, la capacité à résoudre des problèmes ou les habiletés de communication interpersonnelle (Commission européenne, 2009). Or, ces compétences sont di ciles à évaluer à partir d’un simple dossier de candidature et nécessitent donc un processus de sélection rigoureux, incluant une combinaison d’entrevues et de tests. Nous y reviendrons dans les chapitres 13 et 14. Ainsi, les transformations du marché du travail exercent une pression sur les organisations, qui doivent s’assurer de mettre en place des stratégies d’attraction et de rétention de leur personnel. Nous traiterons brièvement de rétention dans le chapitre 17, mais l’essentiel de notre propos sera consacré aux pratiques de recrutement et de sélection",
+    a: ""
+  },
+  {
+    q: "\\*\\*\\*CE QU’IL FAUT RETENIR BCP DE CONCEPTS : p.58-59",
+    a: ""
+  },
+  {
+    q: "C’est la nature des activités habituelles d’une entreprise qui détermine son assujettissement à la législation provinciale ou fédérale. Ainsi, le fait qu’une entreprise soit incorporée en vertu de la Loi canadienne sur les sociétés par actions (L.R.C. 1985, ch. C-44) ou de la Loi sur les sociétés par actions (R.L.R.Q.) ne détermine pas de quelle compétence elle relève en matière de droit du travail. Plus précisément, l’article 91 de la Loi constitutionnelle de 1867, repris par le Code canadien du travail (L.R.C. 1985, ch. L-2), précise les « installations, ouvrages, entreprises ou secteurs d’activité » qui relèvent de la compétence législative du Parlement fédéral, en citant notamment : • les activités interprovinciales ou internationales reliant une province à une autre province ou à un autre pays ; par exemple, les réseaux de téléphone, de télégraphe et de câble, les chemins de fer, le transport routier, les pipelines, les bacs transbordeurs, les tunnels, les ponts, les canaux, ainsi que tout transport maritime et ses services connexes, comme l’arrimage et le débardage ; • le transport aérien, incluant les aéronefs et les aéroports ; • les domaines de la radiodi usion, de la télédi usion et de la câblodistribution ; • les banques constituées en vertu de la Loi sur les banques (L.C. 1991, ch. 46), excluant les caisses populaires ; • certaines opérations d’entreprises particulières déclarées par le Parlement comme étant à l’avantage général du Canada ou de plusieurs provinces, par exemple les moulins à farine, les usines de nettoyage des graines de semence, les élévateurs à grain, ainsi que l’extraction et la transformation de l’uranium ; • la plupart des sociétés ou des agences d’État fédérales, comme la Société canadienne des postes, la Société canadienne d’hypothèques et de logement et l’Administration de la voie maritime du Saint-Laurent ; • les entreprises auxquelles s’appliquent les lois fédérales au sens de la Loi sur les océans (L.C. 1996, ch. 31)",
+    a: ""
+  },
+  {
+    q: "Ainsi, si une activité économique ne peut être considérée comme relevant de la compétence législative du Parlement fédéral, elle est automatiquement soumise à la compétence provinciale en matière de droit du travail. Toutefois, dans la mesure où l’activité économique détermine l’assujettissement à l’une ou l’autre des compétences juridiques, une entreprise qui exerce plusieurs activités économiques distinctes peut être soumise aux lois fédérales pour une partie de ses activités, et aux lois provinciales pour le reste",
+    a: ""
+  },
+  {
+    q: "Code canadien du travail encadre les emplois sous juridiction fédérale et s’applique à environ 10 % de la main-d’œuvre au Canada, le reste de la population active relevant de la juridiction des provinces et des territoires (Commission sur l’examen des normes du travail fédérales, 2005). Bien évidemment, la proportion de travailleurs embauchés par des entreprises soumises à la juridiction fédérale varie d’une province à l’autre. Par exemple, au Québec, elle représente environ 7,8 % des salariés (Ressources humaines et Développement des compétences Canada, 2011). Les dispositions légales entourant les activités de dotation sont di érentes selon la compétence législative à laquelle est soumise l’entreprise. Cependant, dans plusieurs domaines, tels que la protection des droits de la personne, la promotion de l’équité en emploi ou la protection de la vie privée, les dispositions légales fédérales et provinciales se ressemblent. Les prochaines sections détaillent les principales dispositions susceptibles d’in uencer la dotation, pour les organisations sous juridiction fédérale ou québécoise, ainsi que leurs conséquences pour celles-ci",
+    a: ""
+  },
+  {
+    q: "La protection des droits individuels Au Canada, toutes les assemblées législatives fédérale, provinciales et territoriales ont adopté des dispositions protégeant les droits individuels. Les plus importants de ces droits sont énoncés dans la Loi canadienne sur les droits de la personne (L.R.C. 1985, ch. H-6) et dans la Charte des droits et libertés de la personne du Québec (L.R.Q. 1975, ch. C-12), qui visent notamment à éliminer la discrimination. Cette notion est particulièrement importante à comprendre, car par dé nition, sélectionner un candidat signi e que l’on va faire une distinction. Cependant, cette distinction doit être basée sur un motif légal, comme la capacité à exercer les responsabilités requises par un emploi. Lorsque la décision est prise sur un motif illégal, la distinction, ou le traitement di érent accordé à un candidat, est discriminatoire",
+    a: ""
+  },
+  {
+    q: "La Loi canadienne sur les droits de la personne protège quiconque vit au Canada contre la discrimination, dé nie comme le fait de réserver à un individu un traitement di négatif ou défavorable ‒ de celui réservé aux autres. Plus spéci érent ‒ quement, la Loi interdit la discrimination basée sur l’un ou l’autre des 11 motifs suivants : • La race, la couleur, l’origine nationale ou ethnique : ces trois motifs de discrimination sont interreliés et sont souvent tous mentionnés dans une plainte, car il est rarement possible d’établir des distinctions claires entre eux. Ils renvoient fréquemment au problème social du racisme ou de la xénophobie. Soulignons que la citoyenneté ne constitue pas en soi un motif de discrimination en vertu de la Loi",
+    a: ""
+  },
+  {
+    q: "L’état de personne graciée : il s’agit de la situation d’une personne ayant obtenu une réhabilitation légale et dont la condamnation a été e acée. Les entreprises sous juridiction fédérale sont soumises à l’application de la Loi canadienne sur les droits de la personne. Au Québec, des dispositions semblables sont contenues dans la Charte des droits et libertés de la personne, détaillée dans la sous-section suivante. La Charte des droits et libertés de la personne du Québec Au Québec, c’est la Charte des droits et libertés de la personne qui interdit la discrimination",
+    a: ""
+  },
+  {
+    q: "L’âge : des exceptions prévues dans certaines lois peuvent cependant ne pas être discriminatoires, comme le fait de xer l’âge légal du travail à 14 ans, tel que le prévoit l’article 156 du Code civil du Québec (L.R.Q. ch. C-1991). • La condition sociale : il s’agit de la position particulière occupée dans la société en raison de circonstances ou de faits donnés (revenu, occupation, scolarité) ; par exemple, les béné ciaires de l’aide sociale, les sans-abri ou les personnes soumises à une retenue sur leur salaire sont susceptibles de subir de la discrimination",
+    a: ""
+  },
+  {
+    q: "Les convictions politiques : ce motif comprend les convictions fermes exprimées par l’adhésion manifeste à une idéologie politique, le militantisme en politique partisane ou dans un groupe de revendication sociale, la participation à des actions d’un syndicat comme groupe de pression sociale, mais n’inclut pas, comme tel, le fait d’appartenir à un syndicat",
+    a: ""
+  },
+  {
+    q: "Les motifs prohibés de discrimination ne sont donc pas exactement les mêmes sous les juridictions fédérale et québécoise. Par exemple, la langue et la condition sociale, motifs prohibés de discrimination au Québec, n’apparaissent pas dans la Loi canadienne ni dans plusieurs lois provinciales ; au Nouveau-Brunswick, les plaintes relatives à la langue sont acceptées si elles sont fondées sur l’ascendance",
+    a: ""
+  },
+  {
+    q: "\\*\\*\\*VOIR LES ‘’CE QU’IL FAUT RETENIR’’ page environ 66",
+    a: ""
+  },
+  {
+    q: "planification des RH définition : est le processus par lequel une organisation prévoit ses besoins et ses disponibilités en matière de RH et tente de les conciliar",
+    a: ""
+  },
+  {
+    q: "2 synonymes de planification des RH?",
+    a: "« gestion prévisionnelle des RH » ou « gestion prévisionnelle de l’emploi et des compétences »,"
+  },
+  {
+    q: "plani cation des RH a pour objectifs?",
+    a: "• de prévoir les surplus et les pénuries de main-d’œuvre a n de les limiter ; • de réduire les coûts liés à ces éventuels surplus et pénuries ; • d’anticiper les coûts de certaines pratiques de gestion des RH, comme la dotation ou la formation ; • de fournir des informations pour l’élaboration de programmes de gestion des RH, par exemple de gestion des carrières, de développement des compétences, etc"
+  },
+  {
+    q: "plani cation stratégique VS  la plani cation opérationnelle des RH?",
+    a: ""
+  },
+  {
+    q: "La dotation?",
+    a: "est une des pratiques permettant de combler les écarts décelés lors de l’exercice de planification"
+  },
+  {
+    q: "révision des besoins en ressources humaines?",
+    a: "c’est-à-dire l’évaluation du nombre de personnes et de leurs compétences nécessaires à l’atteinte des objectifs de l’organisation."
+  },
+  {
+    q: "Pour simpli er, prévoir les besoins en RH consiste à répondre à la question suivante : « Combien faut-il d’employés, et quelles compétences doivent-ils avoir, pour produire la quantité voulue de biens et services, compte tenu de leur productivité individuelle?",
+    a: ""
+  },
+  {
+    q: "les éléments importants à considérer dans les prochains paragraphes. L’analyse de l’environnement externe a pour but de déterminer les menaces auxquelles une organisation est confrontée et les occasions d’a aires qui se présentent à elle. Elle permet de recueillir des informations sur l’état de l’économie, la transformation de la concurrence, l’évolution des parts de marché, l’émergence ou la disparition de certains produits, les changements en matière de réglementation, les préférences des consommateurs, l’arrivée de nouvelles technologies, etc",
+    a: ""
+  },
+  {
+    q: "sources d’information sur l’environnement externe : la presse écrite, générale ou spécialisée ; les associations professionnelles ; les consultants ; les organismes spécialisés, comme l’Institut Fraser ou le Conference Board of Canada ; les agences gouvernementales, notamment Statistique Canada ou l’Institut de la statistique du Québec ; les conférences ou les séminaires",
+    a: ""
+  },
+  {
+    q: "L’analyse de l’environnement interne, pour sa part, porte sur le fonctionnement de l’organisation. Elle couvre, d’une part, les forces de l’entreprise, ce qu’elle fait bien ou ce qui la distingue des concurrents et, d’autre part, ses faiblesses qu’elle fait médiocrement ou ce qu’elle doit améliorer",
+    a: ""
+  },
+  {
+    q: "vrai ou faux; les e ets sur les besoins en RH ne sont pas immédiats, car ils dépendent de la productivité des employés.?",
+    a: "En e et, si la diversi cation des activités est jumelée à une hausse de productivité ou à une réorganisation du travail, il est possible qu’elle n’entraîne pas de nouveaux besoins de main-d’œuvre."
+  },
+  {
+    q: "facteurs nuance sur productivité de la main-d’œuvre?",
+    a: ", l’évolution de la technologie permet à une entreprise de se doter d’équipements de plus en plus performants. La productivité peut également varier en fonction de la nature des contrats ou de la complexité des tâches à exécuter. Certains des facteurs in uençant la productivité sont propres aux RH, comme les compétences du personnel ou sa motivation. Il est à noter que certaines des informations obtenues lors de l’analyse de l’environnement interne d’une organisation sont également pertinentes pour étudier sa productivité."
+  },
+  {
+    q: "méthodes de prévision des besoins en ressources humaine?",
+    a: "Par exemple, la projection des tendances ou les chaînes de Markov sont des méthodes objectives quantitatives de prévision des besoins"
+  },
+  {
+    q: "dans quelle situation est-ce que les gestionnaires ont plutôt tendance à utiliser des méthodes subjectives, ou une combinaison de méthodes subjectives et objectives, dont les plus utilisées sont détaillées dans les pages suivantes?",
+    a: ""
+  },
+  {
+    q: "La méthode subjective la plus couramment utilisée consiste à réunir plusieurs experts, par exemple, des consultants externes, des gestionnaires de l’organisation ou encore des économistes travaillant pour une agence gouvernementale, et à leur demander de formuler des prévisions",
+    a: ""
+  },
+  {
+    q: "la méthode subjective avantage et inconvénient?",
+    a: "avantages d’être simple, peu coûteuse et facilement applicable, y compris dans les PME qui disposent rarement des ressources pour mener à bien de vastes études. Cependant, elle repose sur le jugement des individus plus que sur les faits, de sorte que les prévisions manquent de précision et sont peu étayées. Par ailleurs, le consensus issu de la discussion peut re éter davantage la force de conviction des experts ou les jeux de pouvoir que la connaissance du domaine"
+  },
+  {
+    q: "La technique du groupe nominal?",
+    a: "constitue un compromis entre l’opinion des experts et la méthode Delphi (Lloyd, 2011 ; Belcourt et McBey, 2007) présentée ci-après, puisqu’elle consiste aussi à demander l’avis d’un groupe de spécialistes. Dans un premier temps, les experts e ectuent leurs prévisions de façon individuelle. Par la suite, et contrairement à la méthode Delphi, ces personnes se rencontrent et discutent de chacune des prévisions. Celles-ci deviennent alors la propriété du groupe et sont évaluées de façon neutre, sans que quiconque ne se sente obligé de défendre son analyse initiale."
+  },
+  {
+    q: "La prévision des besoins en ressources humaines La première étape de la plani cation opérationnelle est la prévision des besoins en ressources humaines, c’est-à-dire l’évaluation du nombre de personnes et de leurs compétences nécessaires à l’atteinte des objectifs de l’organisation. Ces besoins, parfois appelés « demande de RH », sont déterminés en fonction des résultats organisationnels attendus et de la contribution des RH à ces résultats (PricewaterhouseCoopers, 2012). La plateforme i+ Interactif fournit un aidemémoire à utiliser pour plani er des besoins en RH. 4.1.1",
+    a: ""
+  },
+  {
+    q: "Le volume de production prévu dépend des résultats de l’analyse des environnements externe et interne  ainsi que de la stratégie retenue par l’organisation pour réagir aux menaces et aux opportunités de cet environnement ; c’est ce que l’on appelle parfois l’« alignement stratégique des RH »",
+    a: ""
+  },
+  {
+    q: "l’« alignement stratégique des RH » (Swanson et Holton, 2009). Cette analyse stratégique peut faire à elle seule l’objet d’un livre entier (par exemple, voir Belcourt et McBey, 2007). Nous reviendrons brièvement sur les éléments importants à considérer dans les prochains paragraphes. L’analyse de l’environnement externe a pour but de déterminer les menaces auxquelles une organisation est confrontée et les occasions d’a aires qui se présentent à elle. Elle permet de recueillir des informations sur l’état de l’économie, la transformation de la concurrence, l’évolution des parts de marché, l’émergence ou la disparition de certains produits, les changements en matière de réglementation, les préférences des consommateurs, l’arrivée de nouvelles technologies, etc",
+    a: ""
+  },
+  {
+    q: "Dans un processus de plani cation stratégique, ces éléments sont intégrés à l’analyse de l’environnement et participent à l’élaboration de la stratégie d’a aires de l’entreprise : c’est ce que l’on appelle la « gestion stratégique des RH » (Belcourt et McBey, 2007). Dans le contexte plus traditionnel de la plani cation opérationnelle des RH, ces éléments sont surtout pris en compte à l’étape de l’élaboration du plan d’action",
+    a: ""
+  },
+  {
+    q: "L’analyse de l’environnement interne, pour sa part, porte sur le fonctionnement de l’organisation. Elle couvre, d’une part, les forces de l’entreprise, ce qu’elle fait bien ou ce qui la distingue des concurrents et, d’autre part, ses faiblesses, ce PARTIE 2 La préparation de la dotation qu’elle fait médiocrement ou ce qu’elle doit améliorer. Par exemple, dans la mise en situation présentée au début de ce chapitre, la disponibilité des locaux est un élément important à considérer dans l’analyse. L’environnement interne inclut la mission de l’organisation, sa vision, la cohésion au sein de son équipe de direction, sa structure et sa situation nancière. Les éléments de l’environnement interne qui touchent plus précisément le personnel, comme la pyramide des âges au sein de l’entreprise, seront surtout considérés à l’étape de l’analyse des disponibilités en RH",
+    a: ""
+  },
+  {
+    q: "méthodes de prévision des besoins en ressources humaines?",
+    a: "1) L’opinion des experts (subjective la + couramment utilisée) 2) La technique du groupe nominal 3) la méthode Delphi"
+  },
+  {
+    q: "avantages de delphie?",
+    a: "méthode Delphi réduit les inconvénients liés à la dynamique de groupe (pressions, jeux de pouvoir, etc.) et permet d’obtenir des prévisions plus précises et mieux justi ées"
+  },
+  {
+    q: "qu’est-ce que l’approche par scénario?",
+    a: "est une autre méthode, basée sur le jugement des gestionnaires, qui vise à élaborer un plan d’action pour répondre à un changement précis dans l’environnement. L’approche consiste à signaler et à documenter un changement anticipé, à concevoir des indicateurs de mesure, puis à élaborer des plans (ou scénarios) pour réagir à ce changement. Dans un premier temps, plusieurs scénarios sont envisagés. Ils sont ensuite évalués en fonction des indicateurs de mesure et de leur probabilité de réalisation. À cette étape, à nouveau, des rapports de consultants, d’organismes spécialisés ou d’agences gouvernementales peuvent aider les organisations à documenter ces probabilités. En n, les plans d’action sont a nés jusqu’à l’obtention des scénarios naux."
+  },
+  {
+    q: "Avantages et inconvénients de l’approche par scénario?",
+    a: "Avantages : d’une part, sa capacité à intégrer à la fois des données qualitatives et des informations quantitatives et, d’autre part, la possibilité de tenir compte d’un ensemble de changements simultanés dans l’environnement. Cette approche permet en outre de prédire les coûts associés à chaque scénario, ce qui facilite l’établissement d’un budget. Désavantages : Cependant, le processus peut paraître lourd pour les gestionnaires, surtout si les scénarios semblent éloignés de leur réalité concrète"
+  },
+  {
+    q: "Qu’est-ce que la méthode projection des tendances?",
+    a: "méthode objective, qui ne s’appuie pas sur le jugement d’individus, mais plutôt sur des données et des comportements passés. En e et, la projection de tendances cherche à projeter dans l’avenir une situation observée dans le passé. Cette méthode repose sur le principe selon lequel les besoins en RH, que l’on cherche à prédire, sont in uencés par un certain nombre de facteurs appelés « indicateurs », comme le nombre de clients. Il s’agit donc de déterminer la relation passée entre les indicateurs et les besoins en RH, puis d’extrapoler pour prédire les besoins futurs."
+  },
+  {
+    q: "sujr quoi s’appuie la méthode de projection des tendances?",
+    a: "la projection des tendances s’appuie sur un grand nombre d’indicateurs repérés par une analyse de l’entreprise durant plusieurs années, et sur des méthodes statistiques pouvant être relativement sophistiquées, comme la régression multiple. En outre, les projections statistiques sont ajustées en fonction d’éléments tels que la productivité au travail ou la courbe d’apprentissage"
+  },
+  {
+    q: "Avantages et inconvénients de la méthode de projection des tendances : avantages : présente l’avantage de se baser sur des données quantitatives et de pouvoir inclure un grand nombre d’indicateurs, ce qui donne des prévisions précises et justi ées. Désavantages : Elle peut toutefois s’avérer compliquée, d’une part, parce que les indicateurs peuvent être di ciles à dé nir et, d’autre part, parce que les calculs statistiques s’avèrent d’autant plus complexes que le nombre d’indicateurs est élevé. cette approche tient pour acquis que les tendances passées se reproduiront, ce qui constitue une source d’erreurs en soi puisqu’il est possible que les tendances changent. Par ailleurs, le fait de se er aux tendances passées ne permet pas d’anticiper un changement brusque dans l’environnement",
+    a: ""
+  },
+  {
+    q: "vrai ou faux; les gestionnaires qui se lancent dans ces analyses utilisent généralement une combinaison d’approches quantitatives et qualitatives en terme d’analyse des besoins en RH?",
+    a: "Vrai mais l’analyse des besoins en RH fournit, pour chaque fonction de l’organisation, des informations sur 1) nombre de postes nécessaires, 2) responsabilités liées aux postes, 3) moment où ces postes sont requis"
+  },
+  {
+    q: "Une « fonction », ou une « catégorie d’emploi » définition?",
+    a: "est une activité professionnelle ayant pour synonymes « profession » ou « occupation », à laquelle correspond une description de tâches et de responsabilités, de même qu’une liste de compétences requises (De Villers, 2009). Par exemple, « ingénieur en aéronautique » est une fonction."
+  },
+  {
+    q: "Un « poste » définition?",
+    a: "est un emploi correspondant à un poste administratif dans une fonction (O ce québécois de la langue française, 2012). Il peut y avoir plusieurs postes pour une même fonction."
+  },
+  {
+    q: "La plani cation des besoins en RH se fait toujours sur la base de postes occupés à temps plein, communément appelés \\_\\_\\_, \\_\\_\\_\\_, et \\_\\_\\_\\_?",
+    a: "sur la base de postes occupés à temps plein, communément appelés « équivalent temps complet », « équivalent temps plein (ETP) » ou encore « année-personne »"
+  },
+  {
+    q: "l’analyse des besoins permet de déterminer le nombre de postes (en équivalent temps plein) dont une organisation pense avoir besoin dans chaque fonction pour mener à bien ses activités. En revanche, elle ne donne aucune information sur le nombre de personnes qui pourront occuper ces postes, et encore moins sur les activités de dotation nécessaires. Pour obtenir ces informations, il est nécessaire de procéder à quoi?",
+    a: "il est nécessaire de procéder à l’analyse des disponibilités en RH, qui constitue la deuxième étape du processus de plani cation."
+  },
+  {
+    q: "l’analyse quantitative des besoins en RH VS l’analyse des besoins?",
+    a: "l’analyse quantitative des besoins en RH, c’est-à-dire la détermination du nombre de postes nécessaires à l’entreprise pour atteindre ses objectifs. Or, l’analyse des besoins inclut également une dimension qualitative, c’est-à-dire l’évaluation des compétences nécessaires pour occuper ces postes."
+  },
+  {
+    q: "Travail à mi-temps Half-time work?",
+    a: "Travail à temps partiel dont la durée est la moitié d’un horaire régulier."
+  },
+  {
+    q: "prévision des disponibilités en ressources humaines?",
+    a: "permet de prédire, à partir de l’inventaire des RH actuelles et des prévisions de mouvements de main-d’œuvre, le nombre de personnes disponibles pour occuper des postes dans chacune des fonctions visées"
+  },
+  {
+    q: "étape 1 du processus de plani cation des disponibilités?",
+    a: "consiste donc à faire un inventaire des RH actuellement disponibles dans l’organisation"
+  },
+  {
+    q: "L’inventaire des RH par fonction?",
+    a: "c’est-à-dire le nombre de personnes en équivalent temps plein pour chaque fonction, est la méthode la plus couramment utilisée"
+  },
+  {
+    q: "qu’est-ce que la promulgation de la Loi favorisant le développement et la reconnaissance des compétences de la main-d’œuvre (L.R.Q., ch. D-8.3)?",
+    a: "oblige les employeurs dont la masse salariale dépasse deux millions de dollars à investir 1 % de cette masse salariale en formation"
+  },
+  {
+    q: "Les inventaires des compétences du personnel se présentent sous deux formes?",
+    a: "les ches individuelles et les repertoires"
+  },
+  {
+    q: "la cartographie des connaissances et l’analyse de leur vulnérabilité permettent?",
+    a: "d’une part, de déterminer les domaines de compétences les plus pertinents et ceux qui doivent être repositionnés, et, d’autre part, de déterminer les risques de perte ou de manque de connaissance et les priorités de transfert"
+  },
+  {
+    q: "« matrice collective des compétences »?",
+    a: "La préparation de la dotation; Ces informations peuvent également être agrégées au niveau de l’organisation ou d’un service, sous forme d’un répertoire des compétences"
+  },
+  {
+    q: "L’évaluation du potentiel définition avantages et inconvénients?",
+    a: "est une pratique onéreuse qui est généralement réservée à certaines catégories d’emplois clés, notamment les postes de cadres et de professionnels. Elle présente l’avantage de fournir des informations utiles dans une optique de mouvements de main-d’œuvre, mais son inconvénient principal, outre son coût élevé, est de créer des attentes en matière de carrière chez les employés identi és comme des hauts potentiels. C’est une pratique qui a cours surtout dans les grandes entreprises"
+  },
+  {
+    q: "prévision des mouvements de main-d’œuvre?",
+    a: "prévoir les mouvements de main-d’œuvre a les ressources qui seront disponibles à l’avenir. En e n d’en déduire et, la main-d’œuvre disponible correspond à la main-d’œuvre actuelle, ajustée en fonction des mouvements prévus."
+  },
+  {
+    q: "3 grands types de mouvements de main-d’œuvre?",
+    a: "• les mouvements internes ; • les départs involontaires ; • les départs volontaires. Les types de mouvements de main-d’œuvre"
+  },
+  {
+    q: "mouvements latéraux synonyme?",
+    a: "Transaferts; c’est-à-dire que le nouveau poste est situé au même niveau hiérarchique que l’ancien. C’est le cas, par exemple, d’un conseiller en rémunération qui devient conseiller en relations de travail. Un transfert peut s’e ectuer au sein du même établissement (par exemple, dans la même usine ou dans la même succursale) ou d’un établissement à un autre (par exemple, un préposé à la clientèle dans un magasin situé à Lévis qui est transféré comme préposé à la clientèle dans un magasin de Québec)"
+  },
+  {
+    q: "mouvements verticaux synonymes (2)?",
+    a: "les promotions et les rétrogradations"
+  },
+  {
+    q: "qui suis-je (2 choses) ‘’Dans les deux premières situations, l’employé perd son emploi pour des raisons économiques, par exemple lorsqu’une entreprise cesse ses activités en tout ou en partie, ou encore qu’un poste est aboli’’?",
+    a: "départs involontaires les plus courants sont la mise à pied (ou mise à disponibilité), le licenciement"
+  },
+  {
+    q: "qui suis-je (1 chaque) ‘’ La \\_1.\\_\\_ est une perte d’emploi temporaire, tandis que le \\_2.\\_\\_\\_ est permanent.’’?",
+    a: "1. Mise à pied, 2. Licenciement"
+  },
+  {
+    q: "\\_\\_x\\_\\_ désigne une perte d’emploi pour des raisons imputables à l’employé, notamment disciplinaires?",
+    a: "Congédiement"
+  },
+  {
+    q: "2 formes de départs volontaires?",
+    a: "la démission, par laquelle un employé met n volontairement et de façon dé nitive à son contrat de travail, et la retraite, par laquelle le travailleur met n à son activité professionnelle"
+  },
+  {
+    q: "la technique la plus utilisée par les gestionnaires pour prévoir les disponibilités de main-d’œuvre?",
+    a: "L’analyse de Markov"
+  },
+  {
+    q: "analyse de markov?",
+    a: "Ce type d’analyse vise à prédire la main-d’œuvre disponible dans chaque catégorie d’emploi à partir des probabilités de mouvement des employés, calculées selon l’historique de mobilité interne"
+  },
+  {
+    q: "3 types d’écart (de la qualification) dans la préparation de la dotation par rapport à la conciliation des besoins et des disponibilités?",
+    a: "• la pénurie de main-d’œuvre, qui se caractérise par des besoins en RH supérieurs aux disponibilités ; • le surplus de main-d’œuvre, qui correspond à la situation inverse, soit des RH disponibles en trop grand nombre par rapport aux besoins anticipés ; • l’inadéquation de la quali cation, qui correspond au cas où le nombre d’employés disponibles répond aux besoins, mais où ces employés ne disposent pas des compétences déterminées à l’étape de l’analyse des besoins"
+  },
+  {
+    q: "Les 3 types d’écarts dans la préparation de la dotation par rapport à la conciliation des besoins et des disponibilités sont-ils qualitatifs ou quantitatifs?",
+    a: "L’inadéquation de la quali cation est une forme d’écart qualitative tandis que la pénurie de main-d’œuvre et le surplus de main-d’œuvre sont quantitatifs"
+  },
+  {
+    q: "quelles sont les actions possibles sur les besoins pour le type d’écart ‘’pénurie’’?",
+    a: "1) réorganisation du travail, 2) augmentation de la productivité"
+  },
+  {
+    q: "quelles sont les actions possibles sur les disponibilités pour le type d’écart ‘’pénurie’’?",
+    a: "- Embauche de personnel - promotion et transfert - politique de rétention - augmentation des heures de travail - emploi temporaire"
+  },
+  {
+    q: "quelles sont les actions possibles sur les besoins pour le type d’écart ‘’surplus?",
+    a: "1) réduction du temps de travail 2) partage du travail"
+  },
+  {
+    q: "quelles sont les actions possibles sur les disponibilités pour le type d’écart ‘’surplus’’?",
+    a: "- Incitatif de départ - mise à pied, licenciement - transfert - congés"
+  },
+  {
+    q: "quelles sont les actions possibles sur les besoins pour le type d’écart ‘’inadéquation de la qualification’’?",
+    a: "1) réorganisation du travail, 2) choix des équipements"
+  },
+  {
+    q: "quelles sont les actions possibles sur les disponibilités pour le type d’écart ‘’inadéquation de la qualification’’?",
+    a: "- Formation et développement des compétences - promotion et transferts - embauche de personnel"
+  },
+  {
+    q: "L’externalisation?",
+    a: "c’est-à-dire le fait de confier certaines activités à des sous traitants, est également une solution de plus en plus prisée pour diminuer le nombre de départs volontaires (par exemple en o er ses politiques rant des primes de rétention ou en favorisant un haut niveau de satisfaction chez les employés)"
+  },
+  {
+    q: "quelles sont les stratégies qui ont pour but d’augmenter les disponibilités en RH?",
+    a: "(dotation, transfert, réduction des départs)"
+  },
+  {
+    q: "ARTT=?",
+    a: "L’aménagement et la réduction du temps de travail (ARTT) est une intervention par laquelle des employés conviennent, en accord avec l’employeur, de réduire, pour un temps déterminé, leurs heures de travail au pro t d’autres travailleurs qui maintiendront leur emploi grâce à cette mesure (L’ARTT vise à maintenir en emploi les personnes menacées de licenciement ou favoriser l’embauche de chercheurs d’emploi grâce à une nouvelle répartition du temps de travail)"
+  },
+  {
+    q: "Que signifie un plancher d’emploi?",
+    a: "Un nombre minimum d’employés à maintenir dans une fonction (ce qu’on appelle un plancher d’emploi),"
+  },
+  {
+    q: "L’Employeur garantit le maintien d’un plancher d’emploi, veut dire quoi?",
+    a: "c’est-à-dire un nombre minimum de postes de professeure ou de professeur de carrière, à plein temps ou équivalent plein temps, étant entendu que le pourcentage de postes attribués non occupés ne peut excéder 10 % de l’ensemble des postes de professeure ou de professeur de carrière. Tout poste attribué non occupé en excédent de 10 % de l’ensemble des postes de professeure ou de professeur ne peut faire partie du plancher d’emploi"
+  },
+  {
+    q: "La variation en pourcentage du plancher d’emploi est égale à quoi?",
+    a: "À la variation en pourcentage de la population étudiante"
+  },
+  {
+    q: "Comment s’applique la variation en pourcentage du plancher d’emploi?",
+    a: "La variation en pourcentage du plancher d’emploi est ensuite appliquée au plancher d’emploi de l’année précédente. Le plancher d’emploi pour l’année courante est arrondi à l’entier le plus près."
+  },
+  {
+    q: "Le processus de planification doit être complété par quoi?",
+    a: "doit être complété par une analyse plus approfondie des compétences requises pour chaque fonction. Ce processus, appelé « analyse de fonction »"
+  },
+  {
+    q: "étapes du Guide de la plani cation intégrée?",
+    a: "1. Détermination des objectifs opérationnels 2. Analyse de l’environnement a) Analyse de l’e ectif b) Analyse interne c) Analyse externe 3. Analyse des écarts 4. Établissement des priorités pour réaliser les objectifs a) Identi cation des priorités en matière de RH b) Établissement de stratégies relatives, notamment, au recrutement et à la dotation, à la mobilité et aux réa ectations, à l’équité en matière d’emploi, à la formation, à l’apprentissage et au perfectionnement professionnel, au maintien du savoir collectif et au mieux-être en milieu de travail. 5. Mesure, surveillance et rapport des progrès accomplish"
+  },
+  {
+    q: "Prévoir les besoins quantitatifs en RH consiste à?",
+    a: "évaluer le nombre de personnes requises pour atteindre les objectifs de l’organisation"
+  },
+  {
+    q: "L’analyse des disponibilités en RH commence par quoi?",
+    a: "par un inventaire du personnel disponible dans l’organisation"
+  },
+  {
+    q: "La prévision des mouvements de main-d’œuvre permet de faire quoi?",
+    a: "de se projeter dans le futur et de déterminer combien de personnes seront effectivement disponibles pour travailler à temps plein au moment opportun. Déterminer les actions à entreprendre pour concilier les besoins et les disponibilités de main-d’œuvre."
+  },
+  {
+    q: "le droit du travail relève de la compétence provinciale ou fédérale?",
+    a: "Provincial"
+  },
+  {
+    q: "vrai ou faux; une entreprise qui exerce plusieurs activités économiques distinctes peut être soumise aux lois fédérales pour une partie de ses activités, et aux lois provinciales pour le reste?",
+    a: "Vrai"
+  },
+  {
+    q: "Quels sont les droits les plus importants en matière de protection des droits individuels?",
+    a: "la Loi canadienne sur les droits de la personne (L.R.C. 1985, ch. H-6) et dans la Charte des droits et libertés de la personne du Québec (L.R.Q. 1975, ch. C-12)"
+  },
+  {
+    q: "Qu’est-ce que la Loi canadienne sur les droits de la personne (L.R.C. 1985, ch. H-6) et dans la Charte des droits et libertés de la personne du Québec (L.R.Q. 1975, ch. C-12) visent?",
+    a: "visent notamment à éliminer la discrimination"
+  },
+  {
+    q: "la Loi interdit la discrimination basée sur l’un ou l’autre des 11 motifs, nomme en 3?",
+    a: "La race, la couleur, l’origine nationale ou ethnique : ces trois motifs de discrimination sont interreliés et sont souvent tous mentionnés dans une plainte, car il est rarement possible d’établir des distinctions claires entre eux. Ils renvoient fréquemment au problème social du racisme ou de la xénophobie"
+  },
+  {
+    q: "vrai ou faux; Soulignons que la citoyenneté ne constitue pas en soi un motif de discrimination en vertu de la Loi?",
+    a: "Vrai"
+  },
+  {
+    q: "Qu’est-ce que la Charte des droits et libertés de la personne protège?",
+    a: "Elle s’applique à toute personne et à toute organisation sous juridiction provincial, la Charte couvre plusieurs domaines de la vie, comme le droit au secours, au logement ou à l’éducation, nous détaillerons ici les dispositions sur la discrimination qui ont trait plus particulièrement au travail, etc."
+  },
+  {
+    q: "Quels sont les points importants que couvre L’article 10 de la Charte énumère les caractéristiques personnelles qui constituent les motifs de discriminati des droits et libertés de la personne?",
+    a: "Elle interdit concernnt • L’âge, • La condition sociale, • Les convictions politiques"
+  },
+  {
+    q: "Qu’est-ce que la condition sociale?",
+    a: "il s’agit de la position particulière occupée dans la société en raison de circonstances ou de faits donnés (revenu, occupation, scolarité) ; par exemple, les bénéficiaires de l’aide sociale, les sans-abri ou les personnes soumises à une retenue sur leur salaire sont susceptibles de subir de la discrimination"
+  },
+  {
+    q: "vrai ou faux; les convictions politiques incluent comme tel, le fait d’appartenir à un syndicat?",
+    a: "Faux, elle inclut la participation à des actions d’un syndicat comme groupe de pression sociale, mais n’inclut pas, comme tel, le fait d’appartenir à un syndicat"
+  },
+  {
+    q: "vrai ou faux; la dépendance à une drogue est clairement reconnue comme un motif illégal de discrimination par le gouvernement fédéral, elle n’est couverte qu’implicitement, sous le terme « handicap », au Québec donc un employeur ne peut pas congédier un employé qui prends de la drogue s’il effectue quand même bien son travail?",
+    a: "Vrai"
+  },
+  {
+    q: "Vrai ou faux; Une annonce d’emploi peut imposer une exigence discriminatoire même si celle-ci n’a aucun lien avec l’emploi?",
+    a: "**Faux**, une annonce d’emploi ne peut pas imposer une exigence discriminatoire sans lien avec l’emploi."
+  },
+  {
+    q: "Vrai ou faux; Un formulaire de demande d’emploi peut demander au candidat de fournir des informations sur un motif illégal de discrimination?",
+    a: "**Faux**, un formulaire de demande d’emploi ne peut pas demander au candidat de fournir des informations sur un motif illégal de discrimination."
+  },
+  {
+    q: "Vrai ou faux; La réception, la classification et le traitement des candidatures peuvent être basés sur un motif illégal de discrimination?",
+    a: "**Faux**, la réception, la classification et le traitement des candidatures ne peuvent pas être basés sur un motif illégal de discrimination."
+  },
+  {
+    q: "Vrai ou faux; Une décision de sélection ne peut pas être basée sur un motif illégal de discrimination si l'employeur le juge pertinent?",
+    a: "**Vrai**, aucune décision de sélection ne peut être basée sur un motif illégal de discrimination."
+  },
+  {
+    q: "Vrai ou faux; Lors d'une entrevue, un employeur peut poser des questions portant sur un motif illégal de discrimination?",
+    a: "**Faux**, aucune question lors d'une entrevue ne peut porter sur un motif illégal."
+  },
+  {
+    q: "Vrai ou faux; Les tests de sélection doivent permettre de différencier les candidats uniquement sur les exigences de l'emploi?",
+    a: "**Vrai**, les tests doivent permettre de différencier les candidats uniquement sur les exigences de l'emploi."
+  },
+  {
+    q: "Vrai ou faux; L'embauche, la promotion, la période de probation, la formation professionnelle, les conditions de travail ou le statut d'emploi peuvent être basés sur un motif illégal de discrimination?",
+    a: "**Faux**, l'embauche, la promotion, la période de probation, la formation professionnelle, les conditions de travail ou le statut d'emploi ne peuvent pas être basés sur un motif illégal de discrimination."
+  },
+  {
+    q: "faire paraître une annonce pour trouver « un adjoint administratif » est illégal?",
+    a: "Vrai sauf s’il y a une mention doit préciser que le poste s’adresse autant aux hommes qu’aux femmes, là ce serait correct, même chose si c’est écrit au féminin, cette mention doit s’y retrouver"
+  },
+  {
+    q: "vrai ou faux; un employeur qui, en toute bonne foi, demanderait à un candidat l’origine de son accent, sans pour autant baser sa décision d’embauche sur cette information, serait passible de poursuite pour discrimination illégale?",
+    a: "Vrai, un employeur doit donc être extrêmement prudent dans les questions qu’il pose à un candidat, il est illégal de recueillir des renseignements sur les motifs de discrimination pendant la sélection"
+  },
+  {
+    q: "Quelle est la loi qui interdit formellement de parler d’un facteur discriminant dans l’entrevue?",
+    a: "l’article 18.1 de la Charte, qui interdit formellement de recueillir des informations concernant les motifs illicites de discrimination"
+  },
+  {
+    q: "Quelles sont les 3 formes que peuvent prendre la discrimination?",
+    a: "• directe ; • indirecte ; • systémique."
+  },
+  {
+    q: "Qu’est-ce que la discrimination directe?",
+    a: "La discrimination directe provient d’une pratique ou d’une règle qui utilise de façon explicite un des motifs prohibés. Une annonce d’emploi exigeant une femme pour un poste d’éducateur en garderie est un exemple de discrimination directe. Dans un tel cas, le motif de refus d’embauche est clair, le sexe, et apparaît explicitement parmi les motifs prohibés de discrimination, que ce soit dans la Loi canadienne sur les droits de la personne ou dans les législations provinciales"
+  },
+  {
+    q: "Qu’est-ce que l’article 10 de la Charte des droits et libertés de la personne?",
+    a: "Un employeur qui a refusé de considérer la candidature de Mme/Mr parce qu’elle était une femme/autre raison discriminante, ce qui constitue une discrimination fondée sur l’un des motifs énumérés à l’article 10 de la Charte des droits et libertés de la personne."
+  },
+  {
+    q: "Qu’est-ce que la discrimination indirecte?",
+    a: "se produit lorsqu’un employeur adopte une règle ou une norme qui est neutre à première vue, mais qui a un e et discriminatoire pour un motif prohibé sur un employé ou un groupe d’employés. Ainsi, dans le cas Commission ontarienne des droits de la personne c. Simpsons Sears (1985), la plaignante s’est vu refuser un poste à temps plein, car sa religion prescrit l’observance stricte du sabbat et lui interdit donc de travailler le samedi. L’obligation de travailler le samedi ne fait pas partie des motifs prohibés de discrimination : il n’y a donc pas de discrimination directe. Cependant, la règle du travail le samedi, bien que neutre en apparence, a un e et néfaste sur les employés dont la pratique religieuse requiert l’observance du sabbat. Or, la pratique religieuse fait bel et bien partie des motifs prohibés de discrimination."
+  },
+  {
+    q: "Qu’est-ce que la discrimination systémique?",
+    a: "Rejet d’un nombre disproportionné de candidatures provenant de membres d’un groupe protégé"
+  },
+  {
+    q: "imposer un permis de conduire classe 3 avant l’embauche peut être discriminatoire si les candidats sont triés par élimination de ceux qui l’ont déjà si dans l’annonce c’était inscrit que c’est possible de l’obtenir en cours d’emploi, vrai ou faux?",
+    a: "Vrai, c’est un cas de discrimination systémique, d’ailleurs même si ce n’était pas inscrit dans l’annonce du poste que le candidat peut l’obtenir après c’est quand même discriminatoire. Exiger un permis de conduire de classe 3 avant l'embauche peut être discriminatoire, même si ce permis est pertinent pour le poste"
+  },
+  {
+    q: "Vrai ou faux; il n’est plus nécessaire que la discrimination soit intentionnelle ou fondée sur un critère explicitement formulé dans les chartes ou les lois?",
+    a: "Vrai, car au fil du temps des lois plus proactives ont été promulguées, toutefois il appartient toujours à la personne qui se dit victime de discrimination d’en faire la preuve, même si, avec le temps, les tribunaux ont souvent apprécié une preuve circonstancielle a n de déterminer si, selon toute vraisemblance, la personne a été l’objet d’une distinction illégale"
+  },
+  {
+    q: "Nomme des exceptions dans l’application de la loi dans des situations o ù la législation ne protège pas les candidats dans toutes les circonstances?",
+    a: "1) article 20, que la Loi canadienne sur les droits de la personne prévoir qu’une distinction, une exclusion ou une préférence basée sur un des motifs prohibés n’est pas discriminatoire (ex : on ne saurait évoquer la discrimination basée sur l’âge pour embaucher des enfants de moins de 14 ans), 2) les exigences professionnelles 3) les caractéristiques particulières de l’employeur à but non lucratif"
+  },
+  {
+    q: "En règlementation, que signifi ‘’ La notion d’exigence professionnelle justi ée’’?",
+    a: "l’absence ou la présence d’une caractéristique personnelle dé nie comme un motif de discrimination constitue une qualité ou une aptitude objectivement requise par un emploi. Ainsi, une personne ayant une perte de vision partielle pourra être exclue, à cause de ce handicap, d’un poste de chaueur d’autobus, mais pas nécessairement d’un poste de professeur (Schmitz, 1987). C’est à l’employeur qu’il incombe de prouver l’existence d’une exigence professionnelle justi ée"
+  },
+  {
+    q: "Comment est-ce qu’un employeur peut prouver l’existence d’une exigence professionnelle n’était pas discrimminatoire (La notion d’exigence professionnelle justi ée)?",
+    a: "C’est à l’employeur qu’il incombe de prouver l’existence d’une exigence professionnelle justi ée. En particulier, il doit établir que la norme : • est directement liée à l’exécution des fonctions ou du service dispensé ; • a été adoptée honnêtement et de bonne foi ; • est raisonnablement nécessaire (Commission canadienne des droits de la personne, 2007a)"
+  },
+  {
+    q: "Est-ce que le fait de refuser une candidature de pompier de 60 ans est discriminatoire?",
+    a: "Le jugement précise que l’exigence professionnelle doit « se rapporter objectivement à l’exercice de l’emploi en question, en étant raisonnablement nécessaire pour assurer l’exécution e cace et économique du travail, sans mettre en danger l’employé, ses compagnons de travail et le public en général ». Ainsi, le danger dans l’exécution du travail peut justi er le rejet d’une candidature qui se baserait sur un des motifs prohibés de discrimination."
+  },
+  {
+    q: "vrai ou faux; les objections discriminatoires, voire les menaces de griefs, de la part d’autres employés ne peuvent être invoquées pour justi er une discrimination basée sur une exigence professionnelle?",
+    a: "Vrai"
+  },
+  {
+    q: "menaces de griefs synonyme?",
+    a: "objections discriminatoires"
+  },
+  {
+    q: "vrai ou faux; les pertes économiques subies lorsque les préférences de la clientèle ne sont pas respectées ne justi ent pas de faire une distinction fondée sur un des motifs prohibés?",
+    a: "Vrai, La jurisprudence indique clairement que les pertes économiques subies lorsque les préférences de la clientèle ne sont pas respectées ne justi ent pas de faire une distinction fondée sur un des motifs prohibés (Commission des droits de la personne du Québec c. Les Entreprises L.D. Skelling inc. et al., 1994). Ainsi, il serait illégal de refuser d’embaucher un candidat d’origine africaine comme serveur dans un restaurant chinois sous le seul prétexte que les clients préféreraient être servis par du personnel d’origine asiatique"
+  },
+  {
+    q: "Quelle est la méthode permettant d’évaluer ce qui constitue une exigence professionnelle justi ée?",
+    a: "Cette méthode impose à l’employeur d’établir : 1. qu’il a adopté la norme dans un but rationnellement lié à l’exécution du travail en cause ; 2. qu’il a adopté la norme particulière en croyant sincèrement qu’elle était nécessaire pour réaliser ce but légitime lié au travail ; 3. que la norme est raisonnablement nécessaire pour réaliser ce but légitime lié au travail"
+  },
+  {
+    q: "s’il est possible de composer avec des différences individuelles sans que l’employeur subisse une contrainte excessive, est-ce que la norme est alors une exigence professionnelle justifiée?",
+    a: "Non, s’il est possible de composer avec des di érences individuelles sans que l’employeur subisse une contrainte excessive, la norme n’est pas alors une exigence professionnelle justifiée"
+  },
+  {
+    q: "En quoi consiste l’exception de la discrimination par rapport aux institutions à but non lucratif?",
+    a: "certaines organisations qui desservent exclusivement un groupe ethnique peuvent invoquer cette caractéristique pour embaucher sur la base de l’origine ethnique. Il s’agit d’un deuxième type d’exception : celui des organisations à but non lucratif (OBNL). Ex: un organisme voué à la défense des droits des femmes peut justi er d’accorder une préférence à l’embauche de femmes MAIS doit être objectivement lié à la nature de l’institution (ici, la promotion des droits des femmes)"
+  },
+  {
+    q: "la Charte des droits et libertés de la personne du Québec prévoit qu’une distinction basée sur un motif prohibé peut être justi ée par quels caractières?",
+    a: "le caractère charitable, philanthropique, religieux, politique ou éducatif d’une institution à but non lucratif ou qui est vouée exclusivement au bien-être d’un groupe ethnique"
+  },
+  {
+    q: "vrai ou faux; obliger les employés à porter un uniforme peut être un obstacle pour quelqu’un dont la pratique religieuse exige une certaine tenue vestimentaire. L’employeur devra donc analyser si l’obligation peut être assouplie, ou si l’uniforme peut être adapté aux obligations religieuses de l’employé?",
+    a: "Vrai, quel que soit le motif de discrimination, la Loi canadienne sur les droits de la personne prévoit également l’obligation pour l’employeur de prendre des mesures raisonnables d’adaptation ou d’accommodement."
+  },
+  {
+    q: "Vrai ou faux, afin d’accomoder pour être conforme à la loi, dans le cas d’employés handicapés, des mesures d’adaptation peuvent consister à construire une rampe d’accès pour les fauteuils roulants ou à fournir un écran d’ordinateur conçu pour une personne dont la vision est faible?",
+    a: "Vrai, cependant, l’accommodement demandé doit avoir un caractère raisonnable."
+  },
+  {
+    q: "Vrai ou faux; . Il y a une dé nition juridique qui précise de la contrainte excessive ni de la notion d’« accommodement raisonnable »?",
+    a: "Faux, Il n’y a pas de dé nition juridique précise de la contrainte excessive ni de la notion d’« accommodement raisonnable », mais le paragraphe 15(2) de la Loi canadienne sur les droits de la personne indique trois facteurs à prendre en compte pour déterminer si une mesure d’adaptation crée une contrainte excessive : la santé, la sécurité et les coûts"
+  },
+  {
+    q: "Les lois sur l'équité visent spécifiquement 4 ou 5 groupes désignés pouvant faire partie d’un formulaire VOLONTAIRE lesquels?",
+    a: "les femmes, les Autochtones, les personnes handicapées, les membres des minorités visibles et les minorités ethniques. Il peut y avoir d’autres questions dans ce formulaire volontaire mais le candidat n’est PAS obligé d’y répondre"
+  },
+  {
+    q: "quelle loi au fédéral vise à assurer une représentation équitable aux femmes, aux Autochtones, aux personnes handicapées et aux membres des minorités visibles dans les milieux de travail?",
+    a: "c’est la Loi sur l’équité en matière d’emploi (L.C. 1995, ch. 44)"
+  },
+  {
+    q: "Est-ce que la Loi sur l’équité en matière d’emploi (L.C. 1995, ch. 44) vise toutes les entreprises?",
+    a: "Elle touche tous les employeurs de compétence fédérale ayant 100 employés ou plus et l’ensemble de l’administration publique fédérale"
+  },
+  {
+    q: "La sous-représentation correspond à quoi?",
+    a: "à l’écart entre le taux de disponibilité des membres des groupes visés et leur taux de représentation au sein des e ectifs de l’organisation"
+  },
+  {
+    q: "Qu’est-ce que le taux de disponibilité?",
+    a: "Pour montrer qu’il y a sous-représentation, il faut établir la proportion de personnes membres de chacun des groupes visés qui, dans la région, possèdent les compétences objectives minimales pour occuper l’emploi"
+  },
+  {
+    q: "Qu’est la formule du Calcul de la sous-représentation?",
+    a: "la Commission compare, pour chaque type d’emploi, les données soumises par l’organisme dans son analyse d’e ectifs avec les données les plus récentes sur la représentation, dans la zone appropriée de recrutement, des personnes compétentes et aptes à acquérir la compétence pour occuper cet emploi. Par exemple, pour un emploi de technicien ou technicienne en informatique dans la région de Montréal, s’il y a 7 % de femmes occupant un tel emploi dans une organisation, mais qu’il y a 19 % de femmes compétentes pour occuper un tel emploi dans la région, l’écart de 12 % constitue le pourcentage de sous-représentation"
+  },
+  {
+    q: "Que doivent faire les organisations en cas de sous-représentation?",
+    a: "les organisations sont tenues d’élaborer un programme de redressement et de le transmettre à la Commission"
+  },
+  {
+    q: "synonyme de programme d’équité en emploi?",
+    a: "« programme d’accès à l’égalité »"
+  },
+  {
+    q: "À quoi servant les dispositions légales favorisant l’équité en emploi de sous-représentation?",
+    a: "imposent aux organisations l’adoption de mesures proactives pour rétablir une représentation équitable des groupes historiquement désavantagés sur le marché de l’emploi."
+  },
+  {
+    q: "Donne des idées de moyens d’augmenter le nombre de nouvelles recrues issues des groupes désignés par les programmes d’accès à l’égalité par rapport au recrutement ciblé?",
+    a: "une organisation peut faire paraître une annonce pour un poste dans un journal lu par les membres d’une communauté ethnique, ou dans le journal local d’un quartier multiculturel. Traduire les annonces d’emploi dans la langue d’une communauté culturelle, ou préciser dans ces annonces que l’employeur favorise la di versité en employ"
+  },
+  {
+    q: "En recrutement, est-ce que si un candidat refuse de signer un consentement à la vérification des antécédents, l'employeur aurait le droit de l'éliminer de la liste de sélection de candidats?",
+    a: "Oui, un employeur a le droit d'éliminer un candidat de son processus de sélection si celui-ci refuse de signer le formulaire de consentement à la vérification des antécédents, sous réserve que les vérifications demandées soient pertinentes et directement liées au poste"
+  },
+  {
+    q: "Selon quel article, avant d’embaucher une personne de l’extérieur, l’Employeur doit accorder préséance aux salariés?",
+    a: "C’est selon le principe général de l’article 10.01, Tout poste vacant sera au préalable af d’être [pourvu] à l’externe et un résultat d’af ché à l’interne avant chage annoncera la nomination d’un candidat de l’interne ou de l’externe, le cas échéant."
+  },
+  {
+    q: "quels sont les deux types de clauses d’ancienneté?",
+    a: "?????  « à compétences minimales » et « à compétences égales »."
+  },
+  {
+    q: "qu’est-ce que la clause d’ancienneté à compétences minimales?",
+    a: "privilégie le candidat le plus ancien, à condition qu’il ait les compétences minimales pour exercer l’emploi, comme l’illustre la rubrique « Partage d’expérience 2.08 ». Dans ce cas, la personne chargée de la dotation examinera en premier lieu la liste d’ancienneté des candidats jusqu’à ce qu’elle trouve quelqu’un qui, en plus d’une grande ancienneté, possède les compétences minimales nécessaires pour accomplir immédiatement les tâches liées au poste"
+  },
+  {
+    q: "Qu’est-ce qu’une clause d’ancienneté à compétences égales?",
+    a: "La personne chargée de la dotation examinera en premier lieu les compétences des candidats et choisira celui qui est le plus compétent, même si ses compétences surpassent les exigences minimales de l’emploi. L’ancienneté sera prise en compte uniquement dans le cas où deux candidats auront été évalués comme ayant des compétences égales"
+  },
+  {
+    q: "Qu’est-ce qu’une clause d’ancienneté non absolue ARTICLE V ANCIENNETÉ 5.10 a) Dans tous les cas de promotion ou de poste vacant et/ou fonction disponible et/ou de poste nouvellement créé, la préférence sera accordée au salarié qui a le plus d’ancienneté, [pourvu] que le salarié puisse remplir les exigences normales de la tâche. Nonobstant ce qui est stipulé ci-dessus, s’il s’agit de poste de boucher, [de] poissonnier, [de] décorateur, [de] réceptionnaire, [de] coordonnateur aux planogrammes, [d’]expert et d’assistant-gérant, l’Employeur accorde le poste à la personne qui possède les quali cations pour [pourvoir] le poste selon les besoins de l’entreprise",
+    a: ""
+  },
+  {
+    q: "quelles sont les différences entre la clause d'ancienneté à compétences minimales et la clause d'ancienneté non absolue?",
+    a: "Clause d’ancienneté à compétences minimales : Le poste revient obligatoirement au candidat le plus ancien qui possède les compétences minimales requises, même si un autre candidat est plus compétent. Clause d’ancienneté non absolue : L’ancienneté prime généralement, sauf pour certains postes spécialisés où l’employeur peut choisir le candidat le plus compétent."
+  },
+  {
+    q: "vrai ou faux; (Respect d’ancienneté) si 2 candidats de l’interne se proposent, et qu’il y a un test d’exigence à faire pour le poste, selon une convention collective il pourrait être illégal de donner la poste au candidat qui a complété avec succès le test même si l’autre ne s’est pas présenté, car la personne qui a le plus d’ancienneté est supposé être celle qui obtiens le poste, MÊME si elle ne s’est pas présentée pour le test requis pour le poste?",
+    a: "Ça dépend de la clause d’ancienneté de l’organisation"
+  },
+  {
+    q: "La compétence législative en matière de droit du travail revient au fédéral ou provincial?",
+    a: "au provincial, sauf dans le cas de certaines activités économiques comme le transport ferroviaire, routier, maritime et aérien ; les pipelines, les tunnels et les ponts ; la radiodiffusion, la télédiffusion et la câblodistribution ; les banques à charte, les sociétés d’État ou agences fédérales, ainsi que certaines opérations d’entreprises particulières déclarées comme étant à l’avantage général du Canada"
+  },
+  {
+    q: "Les droits individuels sont protégés, notamment par quelles lois (2)?",
+    a: "la Loi canadienne sur les droits de la personne et, au Québec, par la Charte des droits et libertés de la personne du Québec."
+  },
+  {
+    q: "Dans certaines situations, cependant, une décision basée sur un des motifs prohibés n’est pas considérée comme discriminatoire. Quelles sont les 2 exceptions les plus fréquemment invoquées?",
+    a: "Ce sont les exigences professionnelles et les caractéristiques particulières des institutions à but non lucratif"
+  },
+  {
+    q: "qu’est-ce que le courant développé par le marketing des ressources humaines, ou marketing RH?",
+    a: "Il s’agit d’aborder le recrutement et la rétention des talents de la même façon que l’attraction de clients"
+  },
+  {
+    q: "Quels sont les 2 principaux éléments de l’approche du Marketing RH?",
+    a: "• l’établissement d’une offre en matière de RH, ou proposition de valeur, attrayante pour les employés ; • la diffusion de cette offre par l’intermédiaire d’une marque employeur"
+  },
+  {
+    q: "Pour se démarquer et se positionner comme employeur de choix, comment les organisations doivent faire?",
+    a: "les organisations doivent se préoccuper, d’une part, des attributs de leur marque employeur, c’est-à-dire de la proposition de valeur qu’ils font à leurs employés et, d’autre part, de la notoriété de leur image de marque, soit sa di usion et sa reconnaissance"
+  },
+  {
+    q: "Qu’est-ce que la congruence personne-organisation »?",
+    a: "adaptation de l’o re de l’employeur aux attentes d’un type d’employés potentiels"
+  },
+  {
+    q: "Qu’est-ce que la segmentation de la proposition de valeur?",
+    a: "consiste à étendre la notion de congruence personne-organisation pour cibler de façon délibérée des groupes de candidats en fonction de leurs attentes. La démarche de segmentation nécessite, d’une part, que l’entreprise connaisse bien les attentes et les motivations de chaque groupe d’employés ciblés, actuels ou potentiels et, d’autre part, que son offre en matière de RH soit suffsamment flexible pour pouvoir s’adapter à ces attentes"
+  },
+  {
+    q: "Que permet la segmentation?",
+    a: "permet d’adapter la proposition de valeur aux aspirations d’un groupe cible"
+  },
+  {
+    q: "qu’est-ce que la 2e étape d’étaloration de la proposition de valeur ‘’ l’examen des pratiques de gestion’’ de l’organisation?",
+    a: "Permet de déterminer si l’organisatoin dispose des ressources nécessaires pour répondre aux attentes du personnel. Cet audit peut être complété par l’utilisation d’indicateurs de performance (taux de roulement, ancienneté moyenne, délai moyen pour attribuer un poste, etc.) qui peuvent être ventilés selon la segmentation mentionnée précédemment. Ainsi, l’entreprise peut savoir pour quelles catégories d’employés la proposition de valeur semble adéquate et quelles sont les améliorations à apporter"
+  },
+  {
+    q: "Donne des exemples d’indicateurs de performance?",
+    a: "(taux de roulement, ancienneté moyenne, délai moyen pour attribuer un poste, etc.)"
+  },
+  {
+    q: "une marque employeur n’est e cace que si elle possède trois caractéristiques essentielles, lesquelles?",
+    a: "la clarté, la crédibilité et la cohérence"
+  },
+  {
+    q: "Actions et stratégies à mettre en place pour améliorer le taux de rétention?",
+    a: "1) Se démarquer des concurrents ontariens en améliorant le taux de rétention. 2) Publiciser les avantages et les particularités de l'entreprise. 3) Adapter le message aux différents publics visés. 4) Publier le message sur le site Web de l'entreprise. 5) Privilégier une communication sociale et interactive plutôt qu'une simple transmission de message. 6) Échanger avec les publics sur le message communiqué. 7) Choisir les médias les plus pertinents. 8) Cibler les médias afin d'améliorer la perception du message. 9) Être présent dans les salons de recrutement. 10) Être présent dans les écoles, les cégeps et les universités. 11) Utiliser les sites Web de recrutement spécialisés pour les infirmières. 12) Publier des messages dans les médias de la région."
+  },
+  {
+    q: "Qu’est qu’un employeur de choix?",
+    a: "Que faut-il faire pour être considéré comme un employeur de choix? Pour devenir un employeur de choix, il faut améliorer l’ensemble des domaines de la GRH, de la rémunération à la gestion des compétences, en passant par la dotation, offrir une rémunération globale comparable ou supérieure à celle des organisations concurrentes (de meilleurs salaires et avantages sociaux), reconnaître, sur le plan financier ou non, les contributions de ses employées et employés, offrir des possibilités de développement personnel et professionnel, accorder de l’importance à la conciliation travail et famille et valoriser les initiatives de responsabilité sociale."
+  },
+  {
+    q: "Lequel est le meilleur, si une entreprise a un taux de rétention plus élevé ou plus bas?",
+    a: "très grande majorité des cas, un taux de rétention plus élevé est nettement préférable pour une entreprise"
+  },
+  {
+    q: "« taux de rétention » VS « taux de roulement »?",
+    a: "Le taux de roulement mesure le pourcentage d'employés qui quittent l'organisation au cours d'une période donnée (calculé par le rapport entre le nombre de départs et l'effectif moyen), VS le taux de rétention mesure la proportion d'employés qui demeurent en poste durant cette même période"
+  },
+  {
+    q: "S’il y a un Taux de rétention bas (l'entreprise perd beaucoup d'employés), est-ce que le taux de roulement devrait être bas ou élevé?",
+    a: "Taux de roulement élevé"
+  },
+  {
+    q: "S’il y a un Taux de rétention élevé (l'entreprise réussit à garder son monde) est-ce que le taux de roulement devrait être bas ou élevé?",
+    a: "Taux de roulement bas"
+  },
+  {
+    q: "Qu’est-ce que la La proposition de valeur de l’employeur?",
+    a: "correspond à ce qu’un employeur est prêt à offrir à ses employées et employés pour les attirer, les fidéliser et maximiser leur engagement. Dans le domaine du marketing, la proposition de valeur est associée aux attributs d’une marque ou à la façon dont une entreprise peut préserver son image de marque comme employeur"
+  },
+  {
+    q: "Est-ce que la proposition de valeur de l’employeur se limite aux éléments tangibles comme la rémunération ou la reconnaissance?",
+    a: "NON Cette offre ne se limite pas aux éléments tangibles comme le salaire ou les autres composantes de rémunération ou de reconnaissance; elle inclut des dimensions immatérielles, comme les valeurs et la culture. On parle parfois de la proposition de valeur comme d’un contrat psychologique entre l’employeur et les employées et employés, qui englobe ce que les deux attendent de l’autre."
+  },
+  {
+    q: "qu’est-ce que la marque employeur?",
+    a: "C’est, en fait, la stratégie de communication qu’une organisation utilise pour établir son identité en tant qu’employeur. Elle permet donc de faire la promotion de la proposition de valeur de l’entreprise ou d’établir un lien entre la proposition de valeur comme employeur et la capacité à attirer des candidates et candidats."
+  },
+  {
+    q: "Le travail sur la marque employeur consiste à quoi?",
+    a: "À formaliser une démarche pour valoriser une identité particulière de l’entreprise sur le marché Quelles sont les trois caractéristiques essentielles pour assurer l’efficacité de sa marque employeur? de l’emploi. Il vise donc, d’une part, à fidéliser ses propres salariées et salariés, et, d’autre part, à attirer de nouveaux talents."
+  },
+  {
+    q: "Quelles sont les trois caractéristiques essentielles pour assurer l’efficacité de sa marque employeur?",
+    a: "Clarté crédibilité et cohérence"
+  },
+  {
+    q: "cinq critères les plus souvent utilisés par les recruteuses et recruteurs?",
+    a: "1) Un climat de travail agréable (273; 12,94 %). 2) Un grand réseau d’entreprises (270; 12,58 %). 3) La possibilité d’occuper des postes différents (202; 9,58 %). 4) Le développement professionnel (179; 8,49 %). 5) Un ensemble attrayant d’avantages sociaux (179; 8,49 %)."
+  },
+  {
+    q: "Que signifie l’expression segmentation des employés ciblés?",
+    a: "La segmentation désigne le fait de diviser un marché en groupes homogènes de candidates et candidats ou d’employées et employés ou même de clients ainsi que de traiter différemment ces groupes. Appliquée à la notion de proposition de valeur de l’employeur, la segmentation consiste à faire une offre différente selon les groupes ciblés. Pour entreprendre une démarche de segmentation, l’entreprise doit bien connaître les attentes et les motivations de chaque groupe d’employées et employés ciblés."
+  },
+  {
+    q: "Qu'est-ce qu'une marque employeur?",
+    a: "La marque employeur est un élément visuel, sonore ou un slogan qui permet de reconnaître l'entreprise auprès des candidats et de communiquer son positionnement en tant qu'employeur, c'est-à-dire qui elle est, ce qu'elle a à offrir et le poste proposé aux candidats."
+  },
+  {
+    q: "Quelles sont les trois grandes étapes pour développer une marque employeur?",
+    a: "1) Le diagnostic (recherche marketing). 2) L'élaboration d'une stratégie. 3) La mise en œuvre des outils de communication."
+  },
+  {
+    q: "Quels sont les trois éléments à vérifier lors du diagnostic?",
+    a: "1) Les perceptions externes des candidats et internes des employés concernant les forces et les faiblesses de l'organisation. 2) Les pratiques RH et les pratiques de gestion à l'interne. 3) Le positionnement de l'entreprise sur le marché comparativement à ses concurrents."
+  },
+  {
+    q: "Quels sont les deux volets de la stratégie de marque employeur?",
+    a: "Interne : examiner la vision, le projet d'entreprise, les pratiques RH et les pratiques de gestion afin de les consolider et de les améliorer. Externe : identifier les candidats ciblés, leurs intérêts, le langage à utiliser et les arguments susceptibles de les séduire et de les attirer."
+  },
+  {
+    q: "synonyme de l’analyse de fonction?",
+    a: "L’analyse de poste"
+  },
+  {
+    q: "qu’est-ce que l’analyse de fonction/ analyse de poste?",
+    a: "Processus systématique de collecte d’information sur les tâches accomplies."
+  },
+  {
+    q: "analyse de fonction versus description de poste?",
+    a: "l’analyse de fonction fait référence au processus tandis que la description de poste en est le résultat"
+  },
+  {
+    q: "qu’est-ce que l’analyse de fonction permet de faire dans le contexte de dotation?",
+    a: "Dans un contexte de dotation, l’analyse de fonction permet de décrire le poste à pourvoir et de déterminer les compétences requises chez un candidat"
+  },
+  {
+    q: "à partir de quoi est-ce que les outils de sélection seront conçus?",
+    a: "profil de compétences"
+  },
+  {
+    q: "quels sont les informations à recueillir pour pouvoir faire l’analyse de fonction?",
+    a: "• le rôle de la fonction dans l’organisation ; • la clientèle servie ; • le niveau et l’étendue des responsabilités ; • le contexte dans lequel s’exercent ces responsabilités ; • l’imputabilité inhérente à la fonction ; • les activités principales et secondaires ; • les compétences et les qualités requises pour mener à bien ces activités"
+  },
+  {
+    q: "qui suis-je, Cette méthode n’est pas appropriée non plus pour étudier des fonctions dans lesquelles une grande partie du travail relève de la ré exion?",
+    a: "La méthode de l’observation"
+  },
+  {
+    q: "vrai ou faux, les emplois qui exige souvent des déplacements peuvent être observes par la méthode de l’observation?",
+    a: "Faux, Les emplois qui exigent de fréquents déplacements, comme celui de représentant ou de chau eur routier, sont également diciles à observer"
+  },
+  {
+    q: "pour quel poste on reserve la méthode de l’observation?",
+    a: "l’observation est traditionnellement réservée aux postes de production, dans lesquels le travail e ectué s’observe facilement"
+  },
+  {
+    q: "qui suis-je; Cette méthode a l’avantage de moins perturber le cycle de production que ne le fait l’observation. Toutefois, elle est plus subjective, puisqu’elle repose sur les perceptions des titulaires et dépend de la qualité de la relation qui s’instaure entre l’analyste et le répondant.?",
+    a: "Méthode de l’entrevue"
+  },
+  {
+    q: "qui suis-je; Dans ce cas, on forme habituellement des groupes de cinq ou six personnes, en séparant les titulaires du poste des autres sources internes ou externes à l’organisation. L’objectif des discussions n’est pas d’atteindre un consensus, mais plutôt de comprendre que plusieurs personnes peuvent exercer de manière di érente une même function?",
+    a: "L’entrevue de groupe"
+  },
+  {
+    q: "quels sont les avantages de la méthode du questionnaire?",
+    a: "1) permet de recueillir rapidement des informations fournies par un grand nombre de titulaires de postes. Ces données peuvent ensuite être colligées pour calculer des moyennes et pour déterminer les caractéristiques typiques de la function. 2) très utile lorsque les titulaires des postes sont dispersés géographiquement : il est alors impossible de les observer ou de les rencontrer individuellement. 3) peut également comporter des sections distinctes pour le titulaire du poste et pour le superviseur, afin de réduire les risques de subjectivité."
+  },
+  {
+    q: "dans quelles circonstances la méthode du questionnaire peut s’avérer inutile/négative?",
+    a: "la méthode ne convient guère pour des fonctions moins structurées, comme celles qui sont nouvellement créées ou dont les tâches ne sont pas répétitives."
+  },
+  {
+    q: "la méthode des notes prises par les titulaires?",
+    a: "Ce procédé consiste à demander à la personne qui occupe le poste de noter, à intervalles réguliers, les tâches qu’elle accomplit. Cette méthode, appropriée pour des postes dans lesquels les titulaires sont habitués à écrire, demande beaucoup de temps et de discipline de la part des employés et est soumise à leur subjectivité."
+  },
+  {
+    q: "dans quelles circonstances la méthode des notes prises par les titulaires peut s’avérer utile?",
+    a: "pour des fonctions moins structurées, comme celles qui sont nouvellement créées ou dont les tâches ne sont pas répétitives. Les fonctions di ciles à observer ou peu structurées peuvent être analysées au moyen de notes prises par le titulaire du poste."
+  },
+  {
+    q: "qu’est-ce qu’un incident critique?",
+    a: "Événement significatif permettant d’observer le comportement de titulaire et ses conséquences; un incident critique bien rédigé comprend les causes et les circonstances de l’événement les gestes précis exécutés par le travailleur et les conséquences de son comportement"
+  },
+  {
+    q: "dans quelles circonstances est-ce que l’approche par incident critique est particulièrement riche?",
+    a: "Pour préciser des situations typiques auxquelles le titulaire d’un poste est confronté elle est utile lors de la conception des entrevues sélection par contre en raison de l’ampleur des efforts requis par le titulaire de poste cette méthode d’analyse est relativement rare"
+  },
+  {
+    q: "qu’est-ce que la méthode de La collecte et la compilation de l’information?",
+    a: "Les décisions relatives aux données à recueillir, ainsi qu’aux sources et aux méthodes de collecte, sont prises dès l’étape de la préparation de l’analyse (voir la gure 5.03 à la page 161). Par la suite, le rôle de l’analyste consiste à mettre en œuvre ces décisions a n d’obtenir les renseignements souhaités. Concrètement, l’analyse devrait débuter par la consultation des documents existant dans l’organisation et à l’externe, se poursuivre par une collecte auprès des titulaires de la fonction, que ce soit par l’observation, l’entrevue, le questionnaire ou les notes personnelles, et se terminer par la consultation d’autres experts, internes ou externes, pour con rmer ou compléter les données. Par la suite, les informations recueillies au sujet d’une même fonction sont synthétisées dans un document qui fournit une vue d’ensemble des réponses obtenues"
+  },
+  {
+    q: "que faut-il faire attention en faisant une analyse de qualité?",
+    a: "Toute méthode d’analyse de fonction comporte le risque d’accorder trop d’importance au comportement isolé d’un individu. Idéalement, l’analyste doit observer ou interroger plusieurs titulaires de poste a n de ne retenir que les comportements ou les gestes qui sont similaires d’une personne à l’autre. • A n de pouvoir comparer les réponses d’un individu à l’autre pour déterminer les tâches et responsabilités typiques, il est préférable d’utiliser les mêmes méthodes d’analyse pour tous les postes d’une même fonction. • La description faite par chacun des titulaires étant toujours subjective, la multiplication des sources de données est généralement une bonne pratique"
+  },
+  {
+    q: "comment une analyse de function deviant une description de poste?",
+    a: "L’analyse de fonction est un processus de collecte d’information. Pour que celle-ci soit utilisée de façon appropriée dans les activités de gestion des RH, il est nécessaire de colliger les informations et de les organiser sous forme de documents. La description de poste résulte de ces efforts."
+  },
+  {
+    q: "Description de poste definition?",
+    a: "Document qui synthétise les informations recueillies lors de l’analyse de fonction."
+  },
+  {
+    q: "Est-ce que la description de fonction est la même chose qu'une description de poste?",
+    a: "Non, bien qu’elles se ressemblent, La description de fonction (générique) : Elle définit la raison d'être et les responsabilités globales communes à toute une catégorie d'emploi ou profession au sein de l'organisation (ex. enseignant ou agent de développement). Elle offre plus de flexibilité à l'employeur.; La description de poste (spécifique) : Elle détaille les tâches précises, le supérieur immédiat, la localisation géographique et le contexte particulier de travail rattachés à un poste administratif individuel (ex. enseignant de 3ᵉ année à l'école X)"
+  },
+  {
+    q: "En matière de rémunération, la description de poste est utilisée pour quoi?",
+    a: "pour structurer de façon équitable et logique les échelles salariales. En e et, le salaire doit re éter la valeur du poste, qui est fonction de ses tâches et responsabilités. Toute modi cation importante à une description de poste doit donc se traduire par une réévaluation de la valeur de ce poste. On se sert également de la description de poste pour plani er et organiser le travail, notamment lorsqu’il s’agit de redistribuer les tâches"
+  },
+  {
+    q: "l’analyse de fonction et la description de poste permettent de compléter quoi?",
+    a: "la planification opérationnelle des RH, en fournissant des renseignements sur les tâches et les responsabilités qui seront attribuées au titulaire d’un poste"
+  },
+  {
+    q: "Quels conseils permettent de maximiser l’utilité des descriptions de poste?",
+    a: "1) Intégrer la flexibilité, notamment l’autonomie dans l’exercice des tâches et des responsabilités. 2) Cibler les résultats à atteindre ou les extrants plutôt que les tâches précises. 3) Pour les postes nécessitant beaucoup d’autonomie, privilégier des descriptions moins rigides qui mettent en évidence les objectifs du poste. 4) Réviser et mettre à jour régulièrement les descriptions, idéalement tous les deux ans, sans attendre qu’un poste soit à pourvoir."
+  },
+  {
+    q: "À quelle fréquence les descriptions de poste devraient-elles être révisées et pourquoi?",
+    a: "Elles devraient idéalement être révisées tous les deux ans afin de s’assurer qu’elles demeurent adéquates et à jour. La dotation est un moment approprié pour les réviser, puisqu’elle nécessite un profil de compétences précis et actuel, mais il ne faut pas attendre qu’un poste soit à pourvoir."
+  },
+  {
+    q: "qu’est-ce qu’un profil de compétences?",
+    a: "C’est la définition des compétences requises pour s’acquitter de ses responsabilités avant d’établir les activité qui permettront d’embaucher ces personnes"
+  },
+  {
+    q: "dans quelles circonstances est-ce que l’approche par compétence est largement adopté en gestion des RH?",
+    a: "Que ce soit aux fins de dotation ou dans un but de gestion de carrière d’évaluation de performance ou encore de rémunération même si le permettant à être supplanté par la notion de gestion des talents"
+  },
+  {
+    q: "connaissance versus habileté versus attitude définition?",
+    a: "Les connaissances (savoirs) c’est les informations acquises par une activité mentale tandis que les habiletés (savoir-faire) c’est la mise en œuvre pratique d’un savoir, et l’attitude (savoir-être) c’est l’évaluation qu’une personne fait d’un objet une action ou un autre individu et qui guide sa conduite"
+  },
+  {
+    q: "Vrai ou faux, Les qualités requises peuvent inclure des éléments indispensables à l’emploi, mais qui sont des compétences?",
+    a: "Faux, Les qualités requises peuvent inclure des éléments indispensables à l’emploi, mais qui ne sont pas des compétences. Le rapport avec les qualités et les compétences c’est qu’aux fins de dotation , le but du pro l de compétences est de déterminer les qualités requises par l’emploi"
+  },
+  {
+    q: "qu’est ce que sont des compétences general qui sont propres à un employ qu’on appelle aussi des compétences génériques ou spécifiques?",
+    a: "(Compétences fondamentales qui permettent l’acquisition d’autres compétences) parfois appelées « compétences transversales », sont des compétences fondamentales qui permettent l’acquisition de toutes les autres et ne sont pas propres à un poste en particulier. Elles font plutôt référence aux compétences présentes dans l’ensemble des processus de travail. Elles sont donc transférables d’un contexte à un autre. Les compétences génériques peuvent être des connaissances comme le calcul, des habiletés telles que la résolution de problèmes, ou encore des attitudes comme la capacité à travailler en équipe."
+  },
+  {
+    q: "non mais un synonyme de competence transversales?",
+    a: "Compétences génériques"
+  },
+  {
+    q: "definition des compétences spécifiques?",
+    a: "elles sont des compétences techniques, professionnelles ou scienti ques, qui ont été acquises dans le cadre d’une formation précise. Par exemple, TechnoCompétences, le comité sectoriel de main-d’œuvre en technologies de l’information et des communications, a dressé les pro ls de compétences de 14 professions dans le domaine du multimédia"
+  },
+  {
+    q: "Quelles sont les trois principales approches pour établir un profil de compétences?",
+    a: "Le texte annonce trois approches, mais l’extrait fourni présente uniquement la première : les référentiels de compétences sur mesure."
+  },
+  {
+    q: "En quoi consiste l’approche des référentiels de compétences sur mesure?",
+    a: "Elle consiste à réaliser des entrevues auprès de deux groupes d’employés : ceux ayant une performance excellente et ceux ayant une performance moyenne. Les entrevues portent sur des incidents critiques positifs ou négatifs afin de déterminer les compétences qui distinguent une performance supérieure d’une bonne performance."
+  },
+  {
+    q: "Quelles sources d’information peuvent compléter les entrevues dans cette approche?",
+    a: "L’observation et les conseils d’experts."
+  },
+  {
+    q: "Comment les compétences sont-elles définies dans les référentiels sur mesure?",
+    a: "De façon opérationnelle, en précisant les gestes professionnels et les contextes dans lesquels elles sont mobilisées."
+  },
+  {
+    q: "Comment le niveau de maîtrise de chaque compétence est-il illustré?",
+    a: "Par des comportements clés observables. Chaque compétence comporte entre trois et cinq niveaux de maîtrise."
+  },
+  {
+    q: "Quel niveau de maîtrise est attendu pour chaque compétence d’un poste?",
+    a: "Un niveau de performance optimal est déterminé pour chacune des compétences."
+  },
+  {
+    q: "En quoi consiste le référentiel de compétences sur mesure?",
+    a: "C’est une démarche inductive basée sur l’analyse d’incidents critiques auprès d’employés performants et moyens afin de dégager ce qui caractérise une performance supérieure pour un poste précis."
+  },
+  {
+    q: "Quels sont les avantages du référentiel de compétences sur mesure?",
+    a: "Il est très précis, très opérationnel et parfaitement adapté au contexte de l’entreprise."
+  },
+  {
+    q: "Quels sont les inconvénients du référentiel de compétences sur mesure?",
+    a: "C’est un processus fastidieux, très long (plusieurs mois), coûteux et dépendant d’experts externes."
+  },
+  {
+    q: "En quoi consiste le dictionnaire de compétences?",
+    a: "C’est une démarche déductive qui s’appuie sur un répertoire préétabli de compétences décrites par des comportements types, où l’on classe les compétences existantes selon leur importance."
+  },
+  {
+    q: "Quels sont les avantages du dictionnaire de compétences?",
+    a: "Il est facile et rapide d’utilisation, ludique, peu coûteux et utilisable sans firme externe."
+  },
+  {
+    q: "Quels sont les inconvénients du dictionnaire de compétences?",
+    a: "Il risque d’être déconnecté de la réalité de l’emploi et ne permet pas de déterminer les niveaux de maîtrise requis pour chaque poste."
+  },
+  {
+    q: "En quoi consiste le modèle générique de compétences?",
+    a: "C’est une approche hybride appliquée à une famille d’emplois. Elle combine un socle de compétences fondamentales (génériques) communes à la catégorie et des compétences spécifiques à chaque poste, déclinées en niveaux de maîtrise."
+  },
+  {
+    q: "Quels sont les avantages du modèle générique de compétences?",
+    a: "Il offre un équilibre entre la rigueur opérationnelle et l’économie de temps, ainsi qu’une cohérence globale pour toute une famille d’emplois."
+  },
+  {
+    q: "Quels sont les inconvénients du modèle générique de compétences?",
+    a: "Il exige un effort d’analyse initiale pour la famille d’emplois et nécessite une adaptation au contexte particulier de l’entreprise."
+  },
+  {
+    q: "Quelle est la principale différence entre les trois approches pour établir un profil de compétences?",
+    a: "Le référentiel sur mesure crée un profil pour un poste précis; le dictionnaire permet de choisir dans un catalogue de compétences déjà faites; le modèle générique combine un tronc commun de compétences et des compétences spécifiques à chaque poste au sein d’une famille d’emplois."
+  },
+  {
+    q: "vrai ou faux; quelle que soit la competence considérée il existe plusieurs niveaux de maîtrise et le niveau de maîtrise requis doit figurer dans un profil de competence?",
+    a: "Vrai, B l’indication du niveau n’a pas besoin d’être aussi détaillée mais elle doit cependant permettre de fixer le minimum requis de maitrise de la competence"
+  },
+  {
+    q: "Comment un niveau de maîtrise de la competence peut être indiqué?",
+    a: "Par des adverbs ou par des adjectifs par exemple on peut demander la maîtrise parfait d’une competence ou seulement une connaissance de base on peut aussi proposer une echelle don’t certains échelons sont illustrés par des comportements comme par exemple on a une phrase qui définit une tâche relié au niveau un et on a des exemples de fonctions qui vont avec, et ce, pour chaque niveau"
+  },
+  {
+    q: "Pourquoi est-il essentiel de pondérer les compétences?",
+    a: "Parce que toutes les compétences n’ont pas la même importance. Il faut distinguer les compétences indispensables de celles qui sont importantes ou qui constituent des atouts."
+  },
+  {
+    q: "De quels facteurs tient compte la pondération des compétences?",
+    a: "1) L’importance de chacune des tâches et des responsabilités contenues dans la description de poste. 2) L’importance de la compétence pour chaque tâche."
+  },
+  {
+    q: "Quelles sont les trois caractéristiques que doit respecter un profil de compétences?",
+    a: "Il doit être non déficient, non contaminé et non biaisé. Il doit également être réaliste."
+  },
+  {
+    q: "Qu’est-ce qu’un profil non déficient?",
+    a: "C’est un profil complet qui tient compte de toutes les compétences nécessaires à l’ensemble des dimensions du poste."
+  },
+  {
+    q: "Comment s’assurer qu’un profil de compétences est non déficient?",
+    a: "La liste des compétences requises doit s’appuyer sur une analyse complète et récente de la fonction, conformément à la description de poste."
+  },
+  {
+    q: "Qu’est-ce qu’un profil non contaminé?",
+    a: "C’est un profil qui ne comprend que les compétences nécessaires au poste."
+  },
+  {
+    q: "Comment s’assurer qu’un profil de compétences est non contaminé?",
+    a: "Utiliser une grille de pondération des compétences afin de garantir que seules les compétences pertinentes aux tâches déterminées dans la description de poste figurent dans le profil."
+  },
+  {
+    q: "Qu’est-ce qu’un profil non biaisé?",
+    a: "C’est un profil de compétences exempt de discrimination systémique, établi en fonction de la qualification professionnelle requise et qui ne conduit pas à l’élimination systématique de certains groupes démographiques."
+  },
+  {
+    q: "Quels exemples d’exigences peuvent entraîner une discrimination systémique?",
+    a: "Les exigences de taille et de poids, ainsi qu’un nombre excessif d’années d’expérience ou des secteurs dont les femmes ont historiquement été exclues."
+  },
+  {
+    q: "que résulte de l’exercice de determination et de ponderation des compétences?",
+    a: "Ça produit donc une liste ponderer des compétences, et il importe de s’assurer que le profil de compétences dressé n’est ni deficient ni contaminé ni biaisé et qu’il est réaliste afin de pouvoir par la suite l’utiliser pour la dotation ou pour d’autres activités de gestion des RH"
+  },
+  {
+    q: "qu’est-ce qui est compris dans le profil des compétences?",
+    a: "Le pro l de compétences fournit la liste complète des connaissances, des habiletés et des attitudes requises de la part d’un employé pour qu’il e ectue avec succès les tâches liées à son emploi, dans le contexte spéci que de l’organisation ; à cela, s’ajoutent les autres caractéristiques, comme l’appartenance à un ordre professionnel"
+  },
+  {
+    q: "vrai ou faux?",
+    a: "certaines des compétences requises se développent avec l’expérience dans le poste ou dans l’organisation, de sorte qu’elles peuvent être exigées des candidats avant leur entrée en function? Faux, certaines des compétences requises se développent avec l’expérience dans le poste ou dans l’organisation, de sorte qu’elles NE peuvent PAS être exigées des candidats avant leur entrée en fonction."
+  },
+  {
+    q: "comment appelle-t’on des caractéristique exigées des candidats au moment de la selection?",
+    a: "Critères de selection"
+  },
+  {
+    q: "Quel principe doit guider l’établissement des critères de sélection?",
+    a: "Les critères de sélection doivent correspondre aux compétences et aux qualifications réellement nécessaires pour exercer l’emploi, sans ajouter d’exigences injustifiées."
+  },
+  {
+    q: "Quelle est la différence entre une compétence et un indicateur?",
+    a: "La compétence représente ce que le candidat doit savoir, savoir-faire ou savoir-être, tandis que l’indicateur est la preuve concrète permettant de mesurer ou de supposer qu’il possède cette compétence."
+  },
+  {
+    q: "Le diplôme et l’expérience sont-ils des compétences?",
+    a: "Non, ce sont des indicateurs permettant de démontrer que le candidat possède certaines connaissances ou habiletés."
+  },
+  {
+    q: "Pourquoi le recruteur utilise-t-il des indicateurs?",
+    a: "Pour obtenir une preuve des compétences de façon plus rapide, économique et efficace, sans devoir évaluer chaque compétence individuellement."
+  },
+  {
+    q: "Quels éléments le recruteur doit-il considérer pour choisir ses indicateurs?",
+    a: "1) La façon dont la compétence s’acquiert (études, expérience ou formation en cours d’emploi). 2) Le parcours des employés performants. 3) La précision de l’indicateur. 4) La nécessité de créer un outil de mesure sur mesure lorsqu’aucun diplôme ni expérience ne permet de prouver la compétence."
+  },
+  {
+    q: "Que peut faire le recruteur lorsqu’aucun diplôme ni expérience ne permet de démontrer une compétence?",
+    a: "Concevoir un outil de mesure sur mesure, comme un test pratique, une mise en situation ou une question d’entrevue ciblée."
+  },
+  {
+    q: "qu’est-ce que Le recruteur doit avoir en main au moment de procéder à la dotation en personnel (quatre types d’informations)?",
+    a: "la description de poste, la liste des exigences de l’emploi (profil de compétences et autres caractéristiques), les critères de sélection et leurs indicateurs"
+  },
+  {
+    q: "Outre les compétences, le titulaire d’un poste doit parfois posséder des caractéristiques qui ne relèvent ni des savoirs, ni des savoir-faire, ni des savoir-être. On regroupe ces caractéristiques sous l’appellation « autres qualités », donne un exemple?",
+    a: "La détention d’un permis de conduire ou l’appartenance à un ordre professionnel sont des exemples de ces « autres qualités »."
+  },
+  {
+    q: "Qu’est-ce qu’un profil de compétences et que doit-il préciser?",
+    a: "C’est la liste des compétences que doit maîtriser le détenteur d’un poste pour assumer adéquatement ses responsabilités. Il regroupe généralement les savoirs, les savoir-faire et les savoir-être, et précise le niveau requis ainsi que l’importance respective des compétences."
+  },
+  {
+    q: "Quelles sont les caractéristiques d’un profil de compétences adéquat?",
+    a: "Il doit être non déficient (toutes les compétences requises), non contaminé (uniquement les compétences nécessaires au poste), non biaisé (exempt de discrimination systémique) et réaliste (correspondre exactement à ce qui est requis par l’emploi)."
+  },
+  {
+    q: "Quel est le prérequis pour dresser un profil de compétences adéquat?",
+    a: "Une solide analyse de fonction."
+  },
+  {
+    q: "Pourquoi faut-il établir une liste de critères de sélection à partir du profil de compétences?",
+    a: "Parce que certaines compétences du profil ne sont pas utiles aux fins de sélection, soit parce qu’elles ne sont pas nécessaires dès l’entrée en fonction, soit parce qu’elles ne permettent pas d’évaluer les candidats."
+  },
+  {
+    q: "Comment le recruteur établit-il les critères de sélection?",
+    a: "Il extrait du profil de compétences celles qui seront utilisées pour évaluer les candidats."
+  },
+  {
+    q: "Qu’est-ce qu’un indicateur de compétences?",
+    a: "C’est un moyen permettant de mesurer les compétences correspondant aux critères de sélection."
+  },
+  {
+    q: "Quels sont des exemples d’indicateurs de compétences?",
+    a: "Les diplômes, l’expérience professionnelle, les tests et les questions d’entrevue."
+  },
+  {
+    q: "Au final qu’est-ce que les indicateurs de compétences permettent-ils de faire rendu à l’évaluation?",
+    a: "Avec le plus de précision possible, permettre de départager les candidats."
+  },
+  {
+    q: "que signifi ''éléments contextuels du poste''?",
+    a: "Les « éléments contextuels du poste » désignent toutes les conditions et les contraintes dans lesquelles le travail est réellement effectué : environnement de travail, horaires, cadence, efforts physiques et mentaux, risques, équipements utilisés, interactions avec les autres et degré d’autonomie. En résumé : ce n’est pas seulement ce que l’employé doit faire, mais aussi dans quelles conditions il doit le faire."
+  },
+  {
+    q: "Savoir definition?",
+    a: "compétences et connaissances techniques (connaissances spécialisées dans un domaine professionnel précis, par exemple certaines spécialités de l’ingénierie, du droit, etc. Elles doivent sans contredit être définies par les experts) 2."
+  },
+  {
+    q: "Savoir-faire definition?",
+    a: "compétences de gestion d’activités (gestion du temps, analyse et jugement, gestion de projets, prise de décision, etc.)"
+  },
+  {
+    q: "Savoir-être definition?",
+    a: "compétences relationnelles et personnelles (relations interpersonnelles, travail d’équipe, gestion des conflits, communication, influence, désir d’accomplissement, discipline personnelle, créativité, tolérance au stress, etc.)"
+  },
+  {
+    q: "Quelle est l’utilité de consulter la ou le titulaire de poste lorsqu’on veut réaliser une analyse de fonction?",
+    a: "La ou le titulaire de poste est une source fort utile lorsqu’on veut réaliser une analyse de fonction. Ainsi, nous en apprenons davantage sur la façon dont le travail est réellement effectué."
+  },
+  {
+    q: "quelles sont les forces de la technique de l’analyse documentaire?",
+    a: "elle est utile lorsqu’il n’existe aucune description de poste à faire. Les documents qu’on trouve dans l’organisation ou les différentes bases de données publiques, comme la Classification nationale des professions au Canada, peuvent nous orienter."
+  },
+  {
+    q: "quels sont les faiblesses de la technique de l’analyse documentaire?",
+    a: "les descriptions sont trop génériques et ne correspondent pas précisément aux responsabilités et aux conditions de travail dans une organisation en particulier."
+  },
+  {
+    q: "quelles sont les forces et faiblesses de la technique de l’observation?",
+    a: "Force : elle est utile pour recueillir de l’information sur des faits. Faiblesse : cette méthode n’est pas appropriée pour étudier des fonctions qui comportent une grande part de réflexion ou pour les emplois qui exigent de nombreux déplacements."
+  },
+  {
+    q: "quelles sont les forces et faiblesses de la technique de l’entrevue?",
+    a: "Forces : elle est utile pour les emplois difficilement observables. L’entrevue perturbe également moins le cycle de production que ne le fait l’observation. Faiblesses : elle exige du temps et elle est subjective, puisqu’elle repose sur les perceptions des titulaires et la qualité de la relation que l’analyste et le répondant établissent."
+  },
+  {
+    q: "quelles sont les forces et la technique du questionnaire?",
+    a: "Forces : il est utile lorsque plusieurs postes existent dans une même fonction. Il est aussi utile pour obtenir des informations provenant d’un échantillon de titulaires, afin de décrire les comportements typiques liés à la fonction et non les particularités d’un individu. Il permet d’obtenir des résultats rapidement et à plus grande échelle. Le questionnaire est également approprié lorsque les titulaires des postes sont dispersés géographiquement et qu’ il est impossible de les observer ou de les rencontrer individuellement."
+  },
+  {
+    q: "quelles sont les faiblesses de la technique du questionnaire?",
+    a: "Faiblesse : son principal défaut est lié à sa structure. Il ne convient guère pour des fonctions moins structurées ou pour les fonctions récemment créées."
+  },
+  {
+    q: "quelles sont les forces et faiblesses de la technique des notes prises par la titulaire?",
+    a: "Force : lorsque la fonction est difficile à observer ou est peu structurée. Faiblesses : cette méthode est appropriée aux postes où les titulaires ont l’habitude d’écrire. Elle demande beaucoup de temps et de discipline aux employées et employés qui y participent et dépend de leur subjectivité. De plus, les titulaires se contentent souvent d’énumérer leurs tâches au lieu de décrire la façon dont ils les accomplissent ou les résultats qu’ils obtiennent."
+  },
+  {
+    q: "Outre les savoir, savoir-faire et savoir-être, quelles exigences peuvent figurer dans la liste d’exigences de l’emploi?",
+    a: "Réponse : Avoir un casier judiciaire vierge, être titulaire d’un permis de conduire, avoir un titre professionnel ou une certification professionnelle, avoir la capacité physique de soulever des objets lourds ou de travailler dans des situations exténuantes, et signer une déclaration de consentement (pour travailler dans des endroits où il y a du bruit et de la poussière, etc.)."
+  },
+  {
+    q: "Nommez les faiblesses de la méthode de référentiel de compétences sur mesure. Réponse : L’exercice est trop fastidieux, car il repose sur des entrevues, des analyses et une vérification auprès des acteurs concernés par la fonction, ce qui fait que le référentiel n’est disponible qu’après plusieurs mois et porte généralement sur un nombre restreint de postes considérés comme des emplois clés dans l’organisation; la complexité des entrevues de collecte d’informations et des méthodes d’analyse rend l’organisation dépendante de l’expertise d’une firme externe; et la construction des échelles de maîtrise des compétences est complexe",
+    a: ""
+  },
+  {
+    q: "Qu’entend-on par profil non biaisé?",
+    a: "Réponse : Il s’agit d’un profil de compétences exempt de discrimination systémique, c’est-à-dire qu’il ne conduit pas à l’élimination ou à l’exclusion de membres de groupes cibles, tels que les femmes et les membres des minorités visibles."
+  },
+  {
+    q: "qu’est-ce que l’analyse de poste?",
+    a: "C’est, en fait, un processus de collecte d’informations sur les tâches et les responsabilités du poste à pourvoir"
+  },
+  {
+    q: "synonyme de liste des compétences requises pour occuper l’emploi en question?",
+    a: "« profil de compétences »."
+  },
+  {
+    q: "quelle est la difference entre la formation Générale et la formation spécifique?",
+    a: "formation générale, qui porte sur des compétences transférables, et la formation spécifique, qui développe des compétences propres au fonctionnement de l'entreprise."
+  },
+  {
+    q: "donne des exemples d’apprentissage expérientiel?",
+    a: "apprentissages expérientiels, tels les stages, ou l'apprentis sage par le biais de nouvelles tâches ou affectations, seront intégrés dans ce chapitre en ta nt qu'outi ls de développe ment des compéte nces."
+  },
+  {
+    q: "vrai ou faux; On reconnaît également l'organisation apprenante par l'utilisa tion intensive qu'elle fait des technologies de l'information et de la communication, lesquelles facilitent le partage des re nseignements (sites Web d'échange, banques de données, fo rmation en ligne)?",
+    a: "Vrai"
+  },
+  {
+    q: "Quelles sont les quatre étapes du processus de gestion de la formation des ressources humaines?",
+    a: "1) Analyse des besoins de formation, 2) choix des méthodes de formation, 3) mise en œuvre de l’activité de développement et 4) évaluation de la formation."
+  },
+  {
+    q: "quels sont les organismes permis et autorisé de fournir de la formation pour les entreprises qui ont l’obligation de s’y conformer par la loi favorisant le développement de la formation de la main-d’œuvre?",
+    a: "auprès d'un établissement d'enseignement reconnu, d'un orga nisme formateur ou d'un formateur agréé par le ministre de l' Emploi et de la Solidarité sociale conformément à la loi ; • le remboursement des frais de formation contractés au près d'un établissement d'enseignement reconnu;"
+  },
+  {
+    q: "qu’est-ce que le processus d’analyse de besoins facilite?",
+    a: "Le processus d'analyse des besoins facilite la sélection des formations et des activi tés de développement qui seront nécessaires à l'acquisition de nouvelles compétences."
+  },
+  {
+    q: "Quels sont les trois types de besoins de formation et de développement?",
+    a: "1) Les besoins organisationnels, qui découlent des choix stratégiques de l’entreprise; 2) les besoins liés aux emplois et à l’organisation du travail, qui proviennent d’une unité commerciale ou d’un groupe particulier de métiers; 3) les besoins individuels, qui répondent aux besoins personnels d’un salarié, comme se sentir plus à l’aise dans son travail ou évoluer au sein de l’entreprise."
+  },
+  {
+    q: "Cohésion d'équipe definition?",
+    a: "Ensemble d'actions qui visent à améliorer le fonctionnement d'une équipe, à définir les responsabilités de ses membres et à accroître le potentiel de chacun en vue de bonifier la performance."
+  },
+  {
+    q: "qui suis-je; Il devient alors possible de repérer des enjeux de développement facilitant la co llaboration entre les membres de l'équipe ou la complémen tarité des compétences en vue de la ré alisation d'un projet ou d'un objectif commun?",
+    a: "Les besoins liés aux emplois et à l'organisation du travail"
+  },
+  {
+    q: "nomme des exemples d’outils de besoins organisationnels besoin lié au poste et à l’emploi et besoin individel?",
+    a: "Certains aident à établir les besoins organisationnels (comme le plan d'effectifs), d'autres, les besoins liés aux emplois ou aux métiers (comme les référen tiels de compétences), et d'autres, les besoins individuels (comme l'évaluation multisource)"
+  },
+  {
+    q: "qu’est-ce que l’analyse des taches permet de faire?",
+    a: "On peut aussi analyser les tâches à effectuer dans un emploi donné. L'analyse des tâches conduit à une description détaillée de l'importance, de la fréquence et du degré de difficulté de chaque tâche associée à un emploi. Comme nous l'avons vu dans le chapitre 3, la description des tâches permet de préciser ce qui est attendu dans un emploi, et de déterminer ensuite les critères et les niveaux de performance attendus pour effectuer les tâches de manière efficace et soutenue."
+  },
+  {
+    q: "nomme un synonyme de plan effectif?",
+    a: "La planification"
+  },
+  {
+    q: "ce que le plan affectif permet de faire?",
+    a: "la planification permet de cerner les besoins liés à des compétences à combler. Grâce à cet outil, les responsables de formation peuvent mettre sur pied des programmes qui répondent aux écarts de compétences observés. La formation est particulièrement utile en cas de pénurie qualitative et quantitative de main-d'œuvre."
+  },
+  {
+    q: "vrai ou faux; les référentiels de compétences ne sont pas nécessaire ment liés à un poste : ils peuvent être associés à des fonctions ou à des responsabilités?",
+    a: "Vrai"
+  },
+  {
+    q: "que permet les référentiels de compétences?",
+    a: "fournit une grille de lecture qui servira de base pour déceler des écarts de performance entre ce qui est attendu et ce qui est obtenu dans un emploi ou une fonction. Une fois les lacunes décelées, il est souvent de la responsabilité du titulaire de l'emploi et de son superviseur de déterminer les moyens d'y remédier et de choisir la méthode de développement la plus appropriée pour y parvenir."
+  },
+  {
+    q: "quelles sont les différences entre les référentiels de compétences, le plan effectif et l'analyse des taches?",
+    a: "l’analyse des tâches (ou de fonction) est le processus d'étude systématique qui décortique le contenu concret et opérationnel du travail (que fait l'employé au quotidien ?), le référentiel (ou profil) de compétences découle de cette analyse et définit le profil qualitatif du candidat en énumérant les savoirs, savoir-faire et savoir-être requis pour réussir (quelles qualités faut-il posséder ?), le plan d'effectif est l'outil de prévision quantitative qui détermine le nombre de postes (en Équivalents Temps Plein - ETP) requis pour atteindre les objectifs organisationnels (de combien de personnes a-t-on besoin ?) Elle constitue un compromis entre l’opinion des experts et la méthode Delphi, puisqu’elle consiste à demander l’avis d’un groupe de spécialistes qui effectuent d’abord leurs prévisions de façon individuelle, puis se rencontrent et discutent de chacune des prévisions, lesquelles deviennent la propriété du groupe et sont évaluées de façon neutre, sans que quiconque ne se sente obligé de défendre son analyse initiale, et les prévisions finales sont déterminées par un vote secret. Contrairement à la méthode Delphi, la technique du groupe nominal permet aux experts de se rencontrer et de discuter de chacune des prévisions, qui deviennent alors la propriété du groupe et sont évaluées de façon neutre, sans que quiconque ne se sente obligé de défendre son analyse initiale, tandis que les prévisions finales sont déterminées par un vote secret."
+  }
+];let cards = [...originalCards];
+const markedCards = new Set();
+
+function updateErrorCount() {
+  const count = markedCards.size;
+  document.getElementById('errorBadge').textContent = count;
+  document.getElementById('modalErrorCount').textContent = count;
+
+  const total = cards.length;
+  const successful = Math.max(0, total - count);
+  const percentage = total ? Math.round((successful / total) * 100) : 0;
+  document.getElementById('successPercent').textContent = percentage + ' %';
+  document.getElementById('successFill').style.width = percentage + '%';
+  document.querySelector('.success-track').setAttribute('aria-valuenow', percentage);
+  document.getElementById('successDetails').textContent =
+    `${count} carte${count === 1 ? '' : 's'} en rouge · ${successful} carte${successful === 1 ? '' : 's'} réussie${successful === 1 ? '' : 's'} sur ${total}`;
+}
+
+function createCardFace(item, isErrorList = false) {
+  const wrap = document.createElement('div');
+  if (isErrorList) {
+    wrap.className = 'error-card';
+    wrap.innerHTML = `<button class="unmark-btn" type="button" aria-label="Retirer cette carte des cartes d'erreurs" title="Remettre cette carte en normal"></button>
+      <strong>${escapeHtml(item.q)}</strong><div class="answer">${escapeHtml(item.a)}</div>`;
+    wrap.querySelector('.unmark-btn').addEventListener('click', (event) => {
+      event.stopPropagation();
+      markedCards.delete(item);
+      render();
+      renderErrorCards();
+    });
+    wrap.addEventListener('click', () => wrap.classList.toggle('flipped'));
+    return wrap;
+  }
+
+  wrap.className = 'card-wrap' + (markedCards.has(item) ? ' marked' : '');
+  wrap.innerHTML = `
+    <div class="card">
+      <div class="face front">
+        <div>${escapeHtml(item.q)}</div>
+        <div class="hint">Clique pour voir la réponse 👆</div>
+      </div>
+      <div class="face back">
+        <div>${escapeHtml(item.a)}</div>
+        <div class="hint">Clique pour revenir à la question 👆</div>
+      </div>
+    </div>`;
+
+  const markBtn = document.createElement('button');
+  markBtn.className = 'mark-btn' + (markedCards.has(item) ? ' marked' : '');
+  markBtn.type = 'button';
+  markBtn.setAttribute('aria-label', markedCards.has(item) ? 'Retirer des cartes d’erreurs' : 'Marquer cette question comme erreur');
+  markBtn.title = markedCards.has(item) ? 'Carte marquée comme erreur' : 'Marquer comme erreur';
+  wrap.appendChild(markBtn);
+
+  markBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (markedCards.has(item)) markedCards.delete(item);
+    else markedCards.add(item);
+    render();
+    renderErrorCards();
+  });
+
+  wrap.addEventListener('click', () => {
+    wrap.querySelector('.card').classList.toggle('flipped');
+  });
+  return wrap;
+}
+
+function render() {
+  const container = document.getElementById('cards');
+  container.innerHTML = '';
+  document.getElementById('count').textContent = cards.length;
+  cards.forEach(item => container.appendChild(createCardFace(item)));
+  updateErrorCount();
+}
+
+function renderErrorCards() {
+  const container = document.getElementById('errorCardsList');
+  container.innerHTML = '';
+  const errorCards = cards.filter(item => markedCards.has(item));
+  document.getElementById('modalErrorCount').textContent = errorCards.length;
+  document.getElementById('errorBadge').textContent = errorCards.length;
+  if (errorCards.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-errors';
+    empty.textContent = 'Aucune carte en rouge pour le moment. Clique sur le point rouge d’une carte pour l’ajouter ici.';
+    container.appendChild(empty);
+    return;
+  }
+  errorCards.forEach(item => container.appendChild(createCardFace(item, true)));
+}
+
+const errorModalOverlay = document.getElementById('errorModalOverlay');
+document.getElementById('errorBubble').addEventListener('click', () => {
+  renderErrorCards();
+  errorModalOverlay.classList.add('open');
+});
+document.getElementById('closeErrorModal').addEventListener('click', () => errorModalOverlay.classList.remove('open'));
+errorModalOverlay.addEventListener('click', event => {
+  if (event.target === errorModalOverlay) errorModalOverlay.classList.remove('open');
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') errorModalOverlay.classList.remove('open');
+});
+
+function escapeHtml(value) {
+  return value
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  render();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+});
+
+render();
+</script>
+</body>
+</html>
